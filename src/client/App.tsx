@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
 import type { ParseResponse } from "@shared/api";
+import type { PatientNarrative } from "@shared/narrative";
 
 type HealthResponse = {
   ok: boolean;
   service: string;
 };
 
-const SAMPLE_TEXT =
-  "68-year-old reports chest tightness and shortness of breath for 3 days. " +
-  "Taking warfarin 5 mg daily and ibuprofen 400 mg as needed for knee pain. " +
-  "Also on metformin 500 mg twice daily. Feels dizzy when standing.";
-
 export default function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
-  const [text, setText] = useState(SAMPLE_TEXT);
+  const [sample, setSample] = useState<PatientNarrative | null>(null);
+  const [text, setText] = useState("");
   const [result, setResult] = useState<ParseResponse | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,7 +26,24 @@ export default function App() {
       .catch((err: unknown) => {
         setHealthError(err instanceof Error ? err.message : "Server unreachable");
       });
+
+    fetch("/api/synthetic-patient/default")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<PatientNarrative>;
+      })
+      .then((patient) => {
+        setSample(patient);
+        setText(patient.rawText);
+      })
+      .catch(() => {
+        setHealthError((prev) => prev ?? "Could not load Synthea sample patient");
+      });
   }, []);
+
+  function loadSample() {
+    if (sample) setText(sample.rawText);
+  }
 
   async function handleParse() {
     setLoading(true);
@@ -62,6 +76,15 @@ export default function App() {
         <p className="tagline">Text in → structured timeline + med list</p>
       </header>
 
+      <aside className="safety-banner" role="note">
+        <strong>Synthetic data only.</strong> Do not enter real patient information.
+        {sample && (
+          <span className="banner-detail">
+            {" "}Loaded: {sample.displayName} (Synthea {sample.syntheaPatientId?.slice(0, 8)}…)
+          </span>
+        )}
+      </aside>
+
       <section className="status-card" aria-live="polite">
         <h2>Server status</h2>
         {health && <p className="ok">API connected ({health.service})</p>}
@@ -70,12 +93,20 @@ export default function App() {
       </section>
 
       <section className="parse-section">
-        <label htmlFor="narrative">Patient narrative (synthetic only)</label>
+        <div className="parse-header">
+          <label htmlFor="narrative">Patient narrative</label>
+          {sample && (
+            <button type="button" className="link-btn" onClick={loadSample}>
+              Reload Synthea sample
+            </button>
+          )}
+        </div>
         <textarea
           id="narrative"
-          rows={6}
+          rows={10}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          placeholder={sample ? undefined : "Loading sample patient…"}
         />
         <button type="button" onClick={handleParse} disabled={loading || !text.trim()}>
           {loading ? "Parsing…" : "Parse narrative"}
