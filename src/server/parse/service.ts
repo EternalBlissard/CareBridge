@@ -1,4 +1,5 @@
 import type OpenAI from "openai";
+import { enrichStoryWithRedFlags } from "../../rules/detect-red-flags.js";
 import type { PatientStory } from "../../shared/types.js";
 import { createLlmClient, PARSE_MODEL } from "../llm/client.js";
 import {
@@ -28,7 +29,7 @@ function truncateInput(text: string): { text: string; truncated: boolean } {
   return { text: text.slice(0, MAX_INPUT_CHARS), truncated: true };
 }
 
-function toPatientStory(llm: LlmParseResult): PatientStory {
+function toPatientStory(llm: LlmParseResult): Omit<PatientStory, "redFlags"> {
   return {
     timeline: llm.timeline.map((e) => ({ ...e, provenance: "ai-generated" as const })),
     medications: llm.medications.map((m) => ({ ...m, provenance: "ai-generated" as const })),
@@ -38,6 +39,10 @@ function toPatientStory(llm: LlmParseResult): PatientStory {
       provenance: "ai-generated" as const,
     })),
   };
+}
+
+function finalizeStory(rawText: string, llm: LlmParseResult): PatientStory {
+  return enrichStoryWithRedFlags(rawText, toPatientStory(llm));
 }
 
 async function callLlm(
@@ -87,7 +92,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
   } catch {
     const skel = skeletonParse(text);
     return {
-      story: toPatientStory(skel),
+      story: finalizeStory(text, skel),
       source: "skeleton",
       warning: "AI unavailable — showing structured data from rule-based parse only.",
     };
@@ -100,7 +105,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
     const first = tryValidateJson(raw);
     if (first.ok) {
       return {
-        story: toPatientStory(first.data),
+        story: finalizeStory(text, first.data),
         source: "llm",
         warning: truncationWarning,
       };
@@ -114,7 +119,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
       const repaired = tryValidateJson(repairRaw);
       if (repaired.ok) {
         return {
-          story: toPatientStory(repaired.data),
+          story: finalizeStory(text, repaired.data),
           source: "llm-repair",
           warning: truncationWarning,
         };
@@ -124,7 +129,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
     const msg = err instanceof Error ? err.message : "LLM call failed";
     const skel = skeletonParse(text);
     return {
-      story: toPatientStory(skel),
+      story: finalizeStory(text, skel),
       source: "skeleton",
       warning: `AI explanation unavailable, showing structured data only. (${msg})`,
     };
@@ -132,7 +137,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
 
   const skel = skeletonParse(text);
   return {
-    story: toPatientStory(skel),
+    story: finalizeStory(text, skel),
     source: "skeleton",
     warning: truncationWarning ??
       "AI explanation unavailable, showing structured data only.",

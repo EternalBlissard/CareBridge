@@ -175,3 +175,66 @@ header h1 {
   color: #64748b;
   font-size: 0.9rem;
 }
+
+.red-flags-panel {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.panel-note {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.flag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.flag-item {
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  background: #fff;
+  border: 1px solid #fecaca;
+}
+
+.flag-urgency {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-right: 0.5rem;
+}
+
+.urgency-immediate .flag-urgency {
+  color: #991b1b;
+}
+
+.urgency-urgent .flag-urgency {
+  color: #c2410c;
+}
+
+.urgency-soon .flag-urgency {
+  color: #a16207;
+}
+
+.flag-message {
+  display: block;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.flag-meta {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.35rem;
+}
+
+.chip-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}

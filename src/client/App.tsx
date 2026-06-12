@@ -126,6 +126,26 @@ export default function App() {
             {result.warning && <span className="warning"> — {result.warning}</span>}
           </p>
 
+          {(story?.redFlags.length ?? 0) > 0 && (
+            <div className="panel red-flags-panel" role="alert">
+              <h2>Red flags ({story?.redFlags.length})</h2>
+              <p className="panel-note">Deterministic rules only — not AI-generated</p>
+              <ul className="flag-list">
+                {story?.redFlags.map((flag) => (
+                  <li key={flag.id} className={`flag-item urgency-${flag.urgency}`}>
+                    <span className="flag-urgency" aria-label={`Urgency: ${flag.urgency}`}>
+                      ⚠ {flag.urgency}
+                    </span>
+                    <span className="flag-message">{flag.message}</span>
+                    <span className="flag-meta">
+                      Matched: {flag.triggeringTerms.join(", ")} · rule {flag.ruleId}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="panel">
             <h2>Timeline ({story?.timeline.length ?? 0})</h2>
             <ul>
@@ -156,7 +176,14 @@ export default function App() {
             <h2>Symptoms ({story?.symptoms.length ?? 0})</h2>
             <ul>
               {story?.symptoms.map((s) => (
-                <li key={s.normalizedTerm}>{s.term}</li>
+                <li key={s.normalizedTerm}>
+                  {s.isRedFlag && (
+                    <span className="chip chip-danger" aria-label="Red flag symptom">
+                      ⚠ red flag
+                    </span>
+                  )}
+                  {s.term}
+                </li>
               ))}
             </ul>
           </div>
