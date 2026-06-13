@@ -4,6 +4,8 @@ export type Provenance = "ai-generated" | "deterministic-rule";
 
 export type Urgency = "immediate" | "urgent" | "soon";
 
+export type InteractionSeverity = "major" | "moderate" | "minor";
+
 export type TimelineEvent = {
   id: string;
   type: string;
@@ -44,9 +46,21 @@ export type RedFlag = {
   ruleId: string;
 };
 
+export type Interaction = {
+  drugA: string;
+  drugB: string;
+  severity: InteractionSeverity;
+  mechanism: string;
+  management?: string;
+  source: string;
+  ruleId: string;
+  provenance: "deterministic-rule";
+};
+
 export type PatientStory = {
   timeline: TimelineEvent[];
   medications: Medication[];
   symptoms: Symptom[];
   redFlags: RedFlag[];
+  interactions: Interaction[];
 };

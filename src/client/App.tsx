@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
 import type { ParseResponse } from "@shared/api";
 import type { PatientNarrative } from "@shared/narrative";
+import type { Interaction, Medication } from "@shared/types";
 
 type HealthResponse = {
   ok: boolean;
   service: string;
 };
+
+function otherDrug(med: Medication, interaction: Interaction): string {
+  const name = med.normalizedName.toLowerCase();
+  return interaction.drugA === name ? interaction.drugB : interaction.drugA;
+}
+
+function medInteractions(med: Medication, interactions: Interaction[]): Interaction[] {
+  const name = med.normalizedName.toLowerCase();
+  return interactions.filter((i) => i.drugA === name || i.drugB === name);
+}
 
 export default function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -161,16 +172,59 @@ export default function App() {
 
           <div className="panel">
             <h2>Medications ({story?.medications.length ?? 0})</h2>
-            <ul>
-              {story?.medications.map((med) => (
-                <li key={med.normalizedName}>
-                  <strong>{med.name}</strong>
-                  {med.dose && ` — ${med.dose}`}
-                  {med.frequency && ` (${med.frequency})`}
-                </li>
-              ))}
+            <p className="panel-note">Interaction severity from DDInter (deterministic lookup)</p>
+            <ul className="med-list">
+              {story?.medications.map((med) => {
+                const hits = medInteractions(med, story.interactions);
+                return (
+                  <li key={med.normalizedName} className="med-card">
+                    <div className="med-header">
+                      <strong>{med.name}</strong>
+                      {med.dose && <span className="muted"> — {med.dose}</span>}
+                      {med.frequency && <span className="muted"> ({med.frequency})</span>}
+                    </div>
+                    {hits.length > 0 && (
+                      <div className="interaction-chips">
+                        {hits.map((ix) => (
+                          <span
+                            key={ix.ruleId}
+                            className={`ix-chip severity-${ix.severity}`}
+                            title={`${ix.mechanism}${ix.management ? ` — ${ix.management}` : ""}`}
+                            role={ix.severity === "major" ? "alert" : "note"}
+                          >
+                            ⚠ {ix.severity}: {otherDrug(med, ix)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
+
+          {(story?.interactions.length ?? 0) > 0 && (
+            <div className="panel interactions-panel">
+              <h2>Drug interactions ({story?.interactions.length})</h2>
+              <ul className="flag-list">
+                {story?.interactions.map((ix) => (
+                  <li key={ix.ruleId} className={`flag-item severity-row-${ix.severity}`}>
+                    <span className={`ix-chip severity-${ix.severity}`}>
+                      {ix.severity}
+                    </span>
+                    <span className="flag-message">
+                      {ix.drugA} + {ix.drugB}
+                    </span>
+                    <span className="flag-meta">{ix.mechanism}</span>
+                    {ix.management && (
+                      <span className="flag-meta">Management: {ix.management}</span>
+                    )}
+                    <span className="flag-meta">rule {ix.ruleId} · {ix.source}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="panel">
             <h2>Symptoms ({story?.symptoms.length ?? 0})</h2>

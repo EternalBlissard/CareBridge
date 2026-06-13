@@ -1,4 +1,5 @@
 import type OpenAI from "openai";
+import { checkInteractions } from "../../rules/check-interactions.js";
 import { enrichStoryWithRedFlags } from "../../rules/detect-red-flags.js";
 import type { PatientStory } from "../../shared/types.js";
 import { createLlmClient, PARSE_MODEL } from "../llm/client.js";
@@ -29,7 +30,7 @@ function truncateInput(text: string): { text: string; truncated: boolean } {
   return { text: text.slice(0, MAX_INPUT_CHARS), truncated: true };
 }
 
-function toPatientStory(llm: LlmParseResult): Omit<PatientStory, "redFlags"> {
+function toPatientStory(llm: LlmParseResult): Omit<PatientStory, "redFlags" | "interactions"> {
   return {
     timeline: llm.timeline.map((e) => ({ ...e, provenance: "ai-generated" as const })),
     medications: llm.medications.map((m) => ({ ...m, provenance: "ai-generated" as const })),
@@ -42,7 +43,12 @@ function toPatientStory(llm: LlmParseResult): Omit<PatientStory, "redFlags"> {
 }
 
 function finalizeStory(rawText: string, llm: LlmParseResult): PatientStory {
-  return enrichStoryWithRedFlags(rawText, toPatientStory(llm));
+  const base = toPatientStory(llm);
+  const withFlags = enrichStoryWithRedFlags(rawText, base);
+  return {
+    ...withFlags,
+    interactions: checkInteractions(withFlags.medications),
+  };
 }
 
 async function callLlm(

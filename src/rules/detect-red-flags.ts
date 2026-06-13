@@ -36,9 +36,12 @@ function symptomMatchesRule(symptom: Symptom, rule: RedFlagRuleDef): boolean {
   );
 }
 
+type StoryBeforeSafety = Omit<PatientStory, "redFlags" | "interactions">;
+type StoryWithRedFlags = Omit<PatientStory, "interactions">;
+
 export function detectRedFlags(
   rawText: string,
-  story: Omit<PatientStory, "redFlags">,
+  story: StoryBeforeSafety,
 ): RedFlag[] {
   const haystack = normalize(rawText);
   const symptomText = story.symptoms.map((s) => normalize(s.normalizedTerm)).join(" ");
@@ -71,9 +74,9 @@ export function detectRedFlags(
 }
 
 export function applyRedFlagsToStory(
-  story: Omit<PatientStory, "redFlags">,
+  story: StoryBeforeSafety,
   redFlags: RedFlag[],
-): PatientStory {
+): StoryWithRedFlags {
   const matchedRuleIds = new Set(redFlags.map((f) => f.ruleId));
 
   const symptoms = story.symptoms.map((s) => {
@@ -88,8 +91,8 @@ export function applyRedFlagsToStory(
 
 export function enrichStoryWithRedFlags(
   rawText: string,
-  story: Omit<PatientStory, "redFlags">,
-): PatientStory {
+  story: StoryBeforeSafety,
+): StoryWithRedFlags {
   const redFlags = detectRedFlags(rawText, story);
   return applyRedFlagsToStory(story, redFlags);
 }

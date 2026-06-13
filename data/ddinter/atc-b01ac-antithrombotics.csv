@@ -1,0 +1,7 @@
+drug_a,drug_b,severity,mechanism,management,rule_id
+warfarin,ibuprofen,major,NSAIDs inhibit platelet function and may cause GI bleeding; combined with warfarin bleeding risk is substantially increased,Avoid NSAIDs if possible; use acetaminophen alternative; monitor INR and signs of bleeding,ddi-ddinter-b01ac-m01ae-001
+warfarin,naproxen,major,NSAIDs increase bleeding risk when combined with anticoagulants,Avoid combination; monitor INR closely,ddi-ddinter-b01ac-m01ae-002
+warfarin,aspirin,major,Additive antiplatelet and anticoagulant effects increase bleeding risk,Use only when clearly indicated; GI protection and close monitoring,ddi-ddinter-b01ac-b01ac-001
+warfarin,atorvastatin,moderate,Statins may potentiate warfarin effect via CYP competition,Monitor INR when starting or changing statin dose,ddi-ddinter-b01ac-c10aa-001
+warfarin,metformin,minor,No major direct interaction; both used commonly in diabetic patients on anticoagulation,Standard monitoring,ddi-ddinter-b01ac-a10ba-001
+warfarin,lisinopril,minor,ACE inhibitors rarely affect anticoagulation; watch for hypotension if bleeding occurs,Standard monitoring,ddi-ddinter-b01ac-c09aa-001

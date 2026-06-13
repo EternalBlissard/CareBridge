@@ -238,3 +238,64 @@ header h1 {
   background: #fee2e2;
   color: #991b1b;
 }
+
+.med-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.med-card {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.med-card:last-child {
+  border-bottom: none;
+}
+
+.med-header {
+  margin-bottom: 0.35rem;
+}
+
+.interaction-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ix-chip {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.severity-major {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.severity-moderate {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+}
+
+.severity-minor {
+  background: #fef9c3;
+  color: #a16207;
+  border: 1px solid #fde047;
+}
+
+.interactions-panel {
+  border-color: #fdba74;
+  background: #fffbeb;
+}
+
+.severity-row-major {
+  border-color: #fca5a5;
+}
