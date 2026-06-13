@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import DegradedBanner from "../components/DegradedBanner";
+import { ProvenanceTag } from "../components/ProvenanceTag";
 import { useSpeechNarration } from "../hooks/useSpeechNarration";
+import { friendlyFetchError } from "../utils/errors";
 import type { PatientViewResponse } from "@shared/api";
 import type { PatientCard, PatientStory } from "@shared/types";
 
@@ -51,9 +54,15 @@ export default function PatientView({ story }: PatientViewProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ story }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<PatientViewResponse>;
+      .then(async (res) => {
+        const view = (await res.json()) as PatientViewResponse & {
+          error?: string;
+          warning?: string;
+        };
+        if (!res.ok) {
+          throw new Error(friendlyFetchError(res.status, view));
+        }
+        return view;
       })
       .then((view) => {
         if (!cancelled) setData(view);
@@ -106,8 +115,9 @@ export default function PatientView({ story }: PatientViewProps) {
         </p>
         <p className="meta patient-meta">
           Rewrite source: <strong>{data.source}</strong>
-          {data.warning && <span className="warning"> — {data.warning}</span>}
         </p>
+
+        {data.warning && <DegradedBanner message={data.warning} />}
 
         {supported && (
           <div className="tts-toolbar" role="group" aria-label="Text-to-speech controls">
@@ -184,10 +194,7 @@ export default function PatientView({ story }: PatientViewProps) {
               <h3 className="patient-card-title">{card.title}</h3>
               <p className="patient-card-body">{card.body}</p>
               <footer className="patient-card-footer">
-                <span className="provenance-tag">
-                  {card.provenance === "ai-generated" ? "AI-generated" : "Rule-based"}
-                </span>
-                {card.ruleId && <span className="flag-meta">rule {card.ruleId}</span>}
+                <ProvenanceTag provenance={card.provenance} ruleId={card.ruleId} />
                 {supported && (
                   <button
                     type="button"

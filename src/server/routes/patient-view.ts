@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { PATIENT_DEGRADED_MSG } from "../errors.js";
 import { buildPatientView } from "../patient-view/service.js";
 import { PatientViewRequestSchema } from "../patient-view/schemas.js";
 
@@ -20,7 +21,7 @@ patientViewRouter.post("/", async (req, res) => {
   } catch {
     res.status(500).json({
       error: "Patient view failed",
-      warning: "AI explanation unavailable, showing structured data only.",
+      warning: PATIENT_DEGRADED_MSG,
     });
   }
 });

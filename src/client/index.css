@@ -113,13 +113,105 @@ header h1 {
 }
 
 .safety-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: #fef3c7;
-  border: 1px solid #f59e0b;
+  border: 2px solid #d97706;
   border-radius: 8px;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
   margin-bottom: 1.5rem;
   font-size: 0.95rem;
   color: #78350f;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.safety-banner-lead {
+  margin: 0 0 0.35rem;
+}
+
+.safety-banner-detail {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.degraded-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  background: #fff7ed;
+  border: 2px solid #fb923c;
+  border-radius: 10px;
+  color: #7c2d12;
+}
+
+.degraded-banner p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.degraded-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: #ea580c;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.degraded-inline {
+  padding: 0.5rem 0.75rem;
+  background: #fff7ed;
+  border-left: 3px solid #fb923c;
+  border-radius: 0 6px 6px 0;
+  color: #7c2d12;
+}
+
+.narrative-safety-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.provenance-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.provenance-compact {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+}
+
+.provenance-ai-generated {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  color: #312e81;
+}
+
+.provenance-deterministic-rule {
+  background: #ecfdf5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.provenance-rule {
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: normal;
 }
 
 .banner-detail {
@@ -879,11 +971,6 @@ html.large-text .schedule-items li {
   padding-top: 0.65rem;
   border-top: 1px solid #e2e8f0;
   font-size: 0.85rem;
-}
-
-.provenance-tag {
-  font-weight: 600;
-  color: #1e293b;
 }
 
 .patient-view .muted {

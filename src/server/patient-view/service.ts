@@ -2,6 +2,7 @@ import type OpenAI from "openai";
 import { buildPatientSchedule } from "../../rules/patient-schedule.js";
 import type { PatientViewSource } from "../../shared/api.js";
 import type { PatientCard, PatientStory } from "../../shared/types.js";
+import { PATIENT_DEGRADED_MSG } from "../errors.js";
 import { createLlmClient, PARSE_MODEL } from "../llm/client.js";
 import {
   getCachedPatientRewrite,
@@ -187,7 +188,7 @@ export async function buildPatientView(story: PatientStory): Promise<PatientView
       cards: mergeRewrite(story, template),
       schedule,
       source: "template",
-      warning: "AI plain-language rewrite unavailable — showing template wording.",
+      warning: PATIENT_DEGRADED_MSG,
     };
   }
 
@@ -220,14 +221,13 @@ export async function buildPatientView(story: PatientStory): Promise<PatientView
         };
       }
     }
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "LLM call failed";
+  } catch {
     const template = buildTemplateRewrite(story);
     return {
       cards: mergeRewrite(story, template),
       schedule,
       source: "template",
-      warning: `AI explanation unavailable, showing structured data only. (${msg})`,
+      warning: PATIENT_DEGRADED_MSG,
     };
   }
 
@@ -236,6 +236,6 @@ export async function buildPatientView(story: PatientStory): Promise<PatientView
     cards: mergeRewrite(story, template),
     schedule,
     source: "template",
-    warning: "AI explanation unavailable, showing structured data only.",
+    warning: PATIENT_DEGRADED_MSG,
   };
 }

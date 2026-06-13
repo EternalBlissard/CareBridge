@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { DrugLabelLookupResult, DrugLabelsResponse } from "@shared/api";
+import { friendlyFetchError } from "../utils/errors";
 
 export function useDrugLabels(drugNames: string[]): {
   byDrug: Map<string, DrugLabelLookupResult>;
@@ -30,16 +31,33 @@ export function useDrugLabels(drugNames: string[]): {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ drugs: drugNames, coDrugs: drugNames }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<DrugLabelsResponse>;
+      .then(async (res) => {
+        const result = (await res.json()) as DrugLabelsResponse & {
+          error?: string;
+          warning?: string;
+        };
+        if (!res.ok) {
+          throw new Error(friendlyFetchError(res.status, result));
+        }
+        return result;
       })
       .then((result) => {
-        if (!cancelled) setData(result);
+        if (!cancelled) {
+          setData(result);
+          if (result.warning) setError(null);
+        }
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "FDA lookup failed");
+          setData({
+            labels: [],
+            attribution: "Data provided by the U.S. Food and Drug Administration.",
+            warning:
+              err instanceof Error
+                ? err.message
+                : "FDA label lookup unavailable — DDInter severity still shown.",
+          });
+          setError(null);
         }
       })
       .finally(() => {
@@ -111,7 +129,11 @@ export function DrugLabelAttribution({
   error,
 }: DrugLabelAttributionProps) {
   if (error) {
-    return <p className="fda-attribution error">{error}</p>;
+    return (
+      <p className="fda-attribution degraded-inline" role="status">
+        {error}
+      </p>
+    );
   }
   if (!attribution) return null;
   return (

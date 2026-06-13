@@ -8,6 +8,7 @@ import {
   DrugLabelExcerpt,
   useDrugLabels,
 } from "../components/DrugLabelPanel";
+import { ProvenanceTag } from "../components/ProvenanceTag";
 import type { ParseSource } from "@shared/api";
 import type { PatientStory } from "@shared/types";
 
@@ -41,7 +42,7 @@ const SEVERITY_LABEL: Record<string, string> = {
   minor: "Minor",
 };
 
-export default function ClinicianView({ story, source, warning }: ClinicianViewProps) {
+export default function ClinicianView({ story, source }: ClinicianViewProps) {
   const brief = buildClinicianBrief(story);
   const drugNames = story.medications.map((m) => m.normalizedName);
   const fda = useDrugLabels(drugNames);
@@ -55,7 +56,6 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
         </p>
         <p className="meta">
           Parse source: <strong>{source}</strong>
-          {warning && <span className="warning"> — {warning}</span>}
         </p>
       </header>
 
@@ -74,6 +74,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                 {URGENCY_LABEL[flag.urgency] ?? flag.urgency}
               </span>
               <span className="rf-chip-text">{flag.message}</span>
+              <ProvenanceTag provenance="deterministic-rule" ruleId={flag.ruleId} compact />
             </span>
           ))}
         </div>
@@ -81,7 +82,9 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
 
       <article className="panel clinician-summary">
         <h3>Clinical summary</h3>
-        <p className="panel-note">Deterministic synthesis — not AI-generated</p>
+        <p className="panel-note">
+          <ProvenanceTag provenance="deterministic-rule" ruleId="clinician-brief" compact />
+        </p>
         <p className="summary-text">{brief.summary}</p>
       </article>
 
@@ -117,6 +120,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                     {evt.timeRef && <span className="muted">{evt.timeRef}</span>}
                   </div>
                   <p className="timeline-label">{evt.label}</p>
+                  <ProvenanceTag provenance={evt.provenance} compact />
                   {evt.severityHint && (
                     <p className="timeline-hint muted">Intensity: {evt.severityHint}</p>
                   )}
@@ -141,7 +145,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                 </span>
                 <p className="follow-up-question">{q.question}</p>
                 <p className="follow-up-rationale muted">{q.rationale}</p>
-                <span className="flag-meta">rule {q.ruleId}</span>
+                <ProvenanceTag provenance={q.provenance} ruleId={q.ruleId} compact />
               </li>
             ))}
           </ol>
@@ -168,6 +172,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                   <strong>{med.name}</strong>
                   {med.dose && <span className="muted"> — {med.dose}</span>}
                   {med.frequency && <span className="muted"> ({med.frequency})</span>}
+                  <ProvenanceTag provenance={med.provenance} compact />
                 </div>
                 {hits.length > 0 && (
                   <div className="interaction-chips" role="list" aria-label="Drug interactions">
@@ -187,6 +192,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                           <span className="ix-chip-label">
                             {severityText} interaction with {partner}
                           </span>
+                          <ProvenanceTag provenance={ix.provenance} ruleId={ix.ruleId} compact />
                         </span>
                       );
                     })}
@@ -216,6 +222,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                     )}
                     {s.term}
                     {s.onset && <span className="muted"> · onset {s.onset}</span>}
+                    <ProvenanceTag provenance={s.provenance} compact />
                   </li>
                 ))}
               </ul>
@@ -242,6 +249,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                     {ix.management && (
                       <span className="flag-meta">Management: {ix.management}</span>
                     )}
+                    <ProvenanceTag provenance={ix.provenance} ruleId={ix.ruleId} compact />
                   </li>
                 ))}
               </ul>

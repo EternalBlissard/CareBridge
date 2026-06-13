@@ -3,6 +3,7 @@ import { checkInteractions } from "../../rules/check-interactions.js";
 import { enrichStoryWithRedFlags } from "../../rules/detect-red-flags.js";
 import type { ParseSource } from "../../shared/api.js";
 import type { PatientStory } from "../../shared/types.js";
+import { PARSE_DEGRADED_MSG } from "../errors.js";
 import { createLlmClient, PARSE_MODEL } from "../llm/client.js";
 import { getCachedParse, parseCacheKey, setCachedParse } from "./cache.js";
 import {
@@ -113,7 +114,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
     return {
       story: finalizeStory(text, skel),
       source: "skeleton",
-      warning: "AI unavailable — showing structured data from rule-based parse only.",
+      warning: PARSE_DEGRADED_MSG,
     };
   }
 
@@ -146,13 +147,12 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
         };
       }
     }
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "LLM call failed";
+  } catch {
     const skel = skeletonParse(text);
     return {
       story: finalizeStory(text, skel),
       source: "skeleton",
-      warning: `AI explanation unavailable, showing structured data only. (${msg})`,
+      warning: PARSE_DEGRADED_MSG,
     };
   }
 
@@ -160,7 +160,6 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
   return {
     story: finalizeStory(text, skel),
     source: "skeleton",
-    warning: truncationWarning ??
-      "AI explanation unavailable, showing structured data only.",
+    warning: truncationWarning ?? PARSE_DEGRADED_MSG,
   };
 }

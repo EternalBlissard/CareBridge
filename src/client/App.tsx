@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import ClinicianView from "./views/ClinicianView";
 import PatientView from "./views/PatientView";
+import DegradedBanner from "./components/DegradedBanner";
+import SafetyBanner from "./components/SafetyBanner";
 import { useLargeText } from "./hooks/useLargeText";
+import { friendlyFetchError } from "./utils/errors";
 import type { ParseResponse } from "@shared/api";
 import type { PatientNarrative } from "@shared/narrative";
 
@@ -66,9 +69,9 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
-      const data = (await res.json()) as ParseResponse & { error?: string };
+      const data = (await res.json()) as ParseResponse & { error?: string; warning?: string };
       if (!res.ok) {
-        throw new Error(data.error ?? `HTTP ${res.status}`);
+        throw new Error(friendlyFetchError(res.status, data));
       }
       setResult(data);
       setViewMode("clinician");
@@ -81,7 +84,8 @@ export default function App() {
             : ""),
       );
     } catch (err: unknown) {
-      setParseError(err instanceof Error ? err.message : "Parse failed");
+      const msg = err instanceof Error ? err.message : "Parse failed";
+      setParseError(msg);
     } finally {
       setLoading(false);
     }
@@ -106,16 +110,7 @@ export default function App() {
         <p className="tagline">Text in → structured timeline + med list</p>
       </header>
 
-      <aside className="safety-banner" role="note" aria-label="Safety notice">
-        <strong>Not a diagnostic tool.</strong> Synthetic data only — do not enter real patient
-        information.
-        {sample && (
-          <span className="banner-detail">
-            {" "}
-            Loaded: {sample.displayName} (synthetic sample)
-          </span>
-        )}
-      </aside>
+      <SafetyBanner sample={sample} />
 
       <nav className="a11y-toolbar" aria-label="Accessibility options">
         <button
@@ -155,8 +150,8 @@ export default function App() {
             placeholder={sample ? undefined : "Loading sample patient…"}
             aria-describedby="narrative-hint"
           />
-          <p id="narrative-hint" className="sr-only">
-            Enter or edit a synthetic patient narrative, then parse to generate a timeline.
+          <p id="narrative-hint" className="narrative-safety-hint">
+            For demo only — use the synthetic sample. Do not enter real patient information.
           </p>
           <button type="button" onClick={handleParse} disabled={loading || !text.trim()}>
             {loading ? "Parsing…" : "Parse narrative"}
@@ -178,6 +173,8 @@ export default function App() {
             <h2 id="results-heading" className="sr-only">
               Parsed results
             </h2>
+
+            {result.warning && <DegradedBanner message={result.warning} />}
             <nav
               className="view-toggle"
               role="tablist"

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { FDA_UNAVAILABLE_MSG } from "../errors.js";
 import { DrugLabelsRequestSchema } from "../openfda/schemas.js";
 import { lookupDrugLabels } from "../openfda/service.js";
 
@@ -21,9 +22,10 @@ drugLabelRouter.post("/", async (req, res) => {
     );
     res.json(result);
   } catch {
-    res.status(500).json({
-      error: "Drug label lookup failed",
-      warning: "FDA label lookup unavailable.",
+    res.status(200).json({
+      labels: [],
+      attribution: "Data provided by the U.S. Food and Drug Administration.",
+      warning: FDA_UNAVAILABLE_MSG,
     });
   }
 });
@@ -39,9 +41,11 @@ drugLabelRouter.get("/:drugName", async (req, res) => {
     const result = await lookupDrugLabels([drugName]);
     res.json(result.labels[0] ?? { drugName, found: false, source: "unavailable" });
   } catch {
-    res.status(500).json({
-      error: "Drug label lookup failed",
-      warning: "FDA label lookup unavailable.",
+    res.status(200).json({
+      drugName: req.params.drugName ?? "",
+      found: false,
+      source: "unavailable",
+      warning: FDA_UNAVAILABLE_MSG,
     });
   }
 });
