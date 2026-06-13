@@ -23,10 +23,22 @@ const URGENCY_CHIP_CLASS: Record<string, string> = {
   soon: "rf-chip-soon",
 };
 
+const URGENCY_LABEL: Record<string, string> = {
+  immediate: "Immediate",
+  urgent: "Urgent",
+  soon: "Soon",
+};
+
 const PRIORITY_LABEL: Record<string, string> = {
   high: "High priority",
   medium: "Medium priority",
   low: "Low priority",
+};
+
+const SEVERITY_LABEL: Record<string, string> = {
+  major: "Major",
+  moderate: "Moderate",
+  minor: "Minor",
 };
 
 export default function ClinicianView({ story, source, warning }: ClinicianViewProps) {
@@ -56,9 +68,11 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
               title={`${flag.message} (rule ${flag.ruleId})`}
             >
               <span className="rf-chip-icon" aria-hidden="true">
-                ⚠
+                !
               </span>
-              <span className="rf-chip-urgency">{flag.urgency}</span>
+              <span className="rf-chip-urgency">
+                {URGENCY_LABEL[flag.urgency] ?? flag.urgency}
+              </span>
               <span className="rf-chip-text">{flag.message}</span>
             </span>
           ))}
@@ -73,7 +87,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
 
       <div className="panel clinician-timeline">
         <h3>Timeline ({story.timeline.length})</h3>
-        <p className="panel-note">Color-coded by event type</p>
+        <p className="panel-note">Events labeled by type — color is supplementary</p>
         <ol className="timeline-track" aria-label="Patient timeline">
           {story.timeline.map((evt, index) => {
             const style = timelineTypeStyle(evt.type);
@@ -86,12 +100,16 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                   borderLeftColor: style.border,
                 }}
               >
-                <div className="timeline-marker" style={{ backgroundColor: style.border }} />
+                <div
+                  className="timeline-marker"
+                  style={{ backgroundColor: style.border }}
+                  aria-hidden="true"
+                />
                 <div className="timeline-body">
                   <div className="timeline-meta">
                     <span
                       className="timeline-type-chip"
-                      style={{ backgroundColor: style.border, color: "#1f2937" }}
+                      style={{ backgroundColor: style.border, color: "#0f172a" }}
                     >
                       {style.label}
                     </span>
@@ -152,17 +170,26 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                   {med.frequency && <span className="muted"> ({med.frequency})</span>}
                 </div>
                 {hits.length > 0 && (
-                  <div className="interaction-chips">
-                    {hits.map((ix) => (
-                      <span
-                        key={ix.ruleId}
-                        className={`ix-chip severity-${ix.severity}`}
-                        title={`${ix.mechanism}${ix.management ? ` — ${ix.management}` : ""}`}
-                        role={ix.severity === "major" ? "alert" : "note"}
-                      >
-                        ⚠ {ix.severity}: {otherDrugInInteraction(med, ix)}
-                      </span>
-                    ))}
+                  <div className="interaction-chips" role="list" aria-label="Drug interactions">
+                    {hits.map((ix) => {
+                      const severityText = SEVERITY_LABEL[ix.severity] ?? ix.severity;
+                      const partner = otherDrugInInteraction(med, ix);
+                      return (
+                        <span
+                          key={ix.ruleId}
+                          className={`ix-chip severity-${ix.severity}`}
+                          role={ix.severity === "major" ? "alert" : "listitem"}
+                          title={`${ix.mechanism}${ix.management ? ` — ${ix.management}` : ""}`}
+                        >
+                          <span className="ix-chip-icon" aria-hidden="true">
+                            !
+                          </span>
+                          <span className="ix-chip-label">
+                            {severityText} interaction with {partner}
+                          </span>
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
                 <DrugLabelExcerpt label={label} loading={fda.loading} />
@@ -182,8 +209,9 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                 {story.symptoms.map((s) => (
                   <li key={s.normalizedTerm}>
                     {s.isRedFlag && (
-                      <span className="chip chip-danger" aria-label="Red flag symptom">
-                        ⚠ red flag
+                      <span className="chip chip-danger">
+                        <span aria-hidden="true">! </span>
+                        Red flag
                       </span>
                     )}
                     {s.term}
@@ -198,8 +226,15 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
               <h4>Drug interactions ({story.interactions.length})</h4>
               <ul className="flag-list">
                 {story.interactions.map((ix) => (
-                  <li key={ix.ruleId} className={`flag-item severity-row-${ix.severity}`}>
-                    <span className={`ix-chip severity-${ix.severity}`}>{ix.severity}</span>
+                  <li
+                    key={ix.ruleId}
+                    className={`flag-item severity-row-${ix.severity}`}
+                    role={ix.severity === "major" ? "alert" : undefined}
+                  >
+                    <span className={`ix-chip severity-${ix.severity}`}>
+                      <span aria-hidden="true">! </span>
+                      {SEVERITY_LABEL[ix.severity] ?? ix.severity}
+                    </span>
                     <span className="flag-message">
                       {ix.drugA} + {ix.drugB}
                     </span>

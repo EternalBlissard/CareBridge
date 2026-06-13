@@ -15,13 +15,22 @@ const KIND_LABEL: Record<PatientCard["kind"], string> = {
   visit: "Visit",
 };
 
-const SEVERITY_ICON: Record<string, string> = {
-  immediate: "🚨",
-  urgent: "⚠️",
-  major: "⚠️",
-  moderate: "⚡",
-  minor: "ℹ️",
+const SEVERITY_DISPLAY: Record<string, { short: string; full: string }> = {
+  immediate: { short: "Immediate", full: "Immediate attention needed" },
+  urgent: { short: "Urgent", full: "Urgent — contact care team" },
+  major: { short: "Major", full: "Major interaction warning" },
+  moderate: { short: "Moderate", full: "Moderate concern" },
+  minor: { short: "Minor", full: "Minor note" },
+  soon: { short: "Soon", full: "Follow up soon" },
 };
+
+function isMajorAlert(card: PatientCard): boolean {
+  if (card.kind === "safety") return true;
+  if (card.kind === "interaction") {
+    return card.severityLabel === "major" || card.severityLabel === "immediate";
+  }
+  return false;
+}
 
 export default function PatientView({ story }: PatientViewProps) {
   const [data, setData] = useState<PatientViewResponse | null>(null);
@@ -61,7 +70,7 @@ export default function PatientView({ story }: PatientViewProps) {
 
   if (loading) {
     return (
-      <section className="patient-view" aria-live="polite">
+      <section className="patient-view" aria-live="polite" aria-busy="true">
         <p className="patient-loading">Preparing your plain-language summary…</p>
       </section>
     );
@@ -88,23 +97,30 @@ export default function PatientView({ story }: PatientViewProps) {
         </p>
       </header>
 
-      <div className="patient-cards" aria-label="Health summary cards">
+      <div className="patient-cards" role="list" aria-label="Health summary cards">
         {data.cards.map((card) => {
-          const isAlert = card.kind === "safety" || card.kind === "interaction";
-          const icon = card.severityLabel ? SEVERITY_ICON[card.severityLabel] : null;
+          const severity = card.severityLabel
+            ? SEVERITY_DISPLAY[card.severityLabel]
+            : undefined;
+          const majorAlert = isMajorAlert(card);
 
           return (
             <article
               key={card.id}
               className={`patient-card patient-card-${card.kind}`}
-              role={isAlert ? "alert" : undefined}
+              role={majorAlert ? "alert" : "listitem"}
             >
               <div className="patient-card-header">
                 <span className="patient-card-kind">{KIND_LABEL[card.kind]}</span>
-                {card.severityLabel && (
-                  <span className={`patient-severity severity-${card.severityLabel}`}>
-                    {icon && <span aria-hidden="true">{icon} </span>}
-                    {card.severityLabel}
+                {severity && (
+                  <span
+                    className={`patient-severity severity-${card.severityLabel}`}
+                    aria-label={severity.full}
+                  >
+                    <span className="severity-icon" aria-hidden="true">
+                      !
+                    </span>
+                    <span className="severity-text">{severity.short}</span>
                   </span>
                 )}
               </div>
@@ -125,9 +141,9 @@ export default function PatientView({ story }: PatientViewProps) {
         <section className="patient-schedule" aria-labelledby="schedule-heading">
           <h3 id="schedule-heading">Your schedule</h3>
           <p className="panel-note">Built from medication timing in your story (deterministic)</p>
-          <div className="schedule-grid">
+          <div className="schedule-grid" role="list" aria-label="Daily medication schedule">
             {data.schedule.map((slot) => (
-              <div key={slot.id} className="schedule-slot">
+              <div key={slot.id} className="schedule-slot" role="listitem">
                 <h4 className="schedule-time">{slot.timeLabel}</h4>
                 <ul className="schedule-items">
                   {slot.items.map((item, i) => (

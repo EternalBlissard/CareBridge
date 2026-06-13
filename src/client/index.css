@@ -1,22 +1,105 @@
 :root {
   font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.5;
-  color: #1a1a2e;
+  font-size: 18px;
+  color: #0f172a;
   background: #f8f9fc;
+  --focus-ring: #1d4ed8;
+  --focus-offset: 3px;
+}
+
+html.large-text {
+  font-size: 22px;
 }
 
 * {
   box-sizing: border-box;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   margin: 0;
 }
 
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 1000;
+  padding: 0.75rem 1.25rem;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 0 0 8px 8px;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
 .app {
+  position: relative;
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
+}
+
+.site-header {
+  margin-bottom: 0;
+}
+
+.a11y-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.a11y-toggle {
+  padding: 0.55rem 1rem;
+  border: 2px solid #1e40af;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e3a8a;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.a11y-toggle[aria-pressed="true"] {
+  background: #1e40af;
+  color: #fff;
 }
 
 header h1 {
@@ -26,7 +109,7 @@ header h1 {
 
 .tagline {
   margin: 0 0 1rem;
-  color: #4a5568;
+  color: #334155;
 }
 
 .safety-banner {
@@ -131,11 +214,11 @@ header h1 {
 
 .meta {
   font-size: 0.9rem;
-  color: #475569;
+  color: #334155;
 }
 
 .warning {
-  color: #b45309;
+  color: #9a3412;
 }
 
 .panel {
@@ -265,12 +348,22 @@ header h1 {
 }
 
 .ix-chip {
-  display: inline-block;
-  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.55rem;
   border-radius: 6px;
-  text-transform: uppercase;
+}
+
+.ix-chip-icon {
+  flex-shrink: 0;
+  font-weight: 800;
+}
+
+.ix-chip-label {
+  text-transform: none;
 }
 
 .severity-major {
@@ -308,17 +401,19 @@ header h1 {
 
 .view-tab {
   padding: 0.5rem 1rem;
-  border: 1px solid #cbd5e1;
+  border: 2px solid #64748b;
   border-radius: 8px;
   background: #fff;
+  color: #0f172a;
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .view-tab.active {
-  background: #1e40af;
+  background: #1e3a8a;
   color: #fff;
-  border-color: #1e40af;
+  border-color: #1e3a8a;
 }
 
 .view-tab:disabled {
@@ -532,11 +627,35 @@ header h1 {
   font-size: 0.95rem;
 }
 
-/* Patient view — large type, accessible cards */
+/* Patient view — ≥18px base, ≥7:1 contrast, accessible cards */
 .patient-view {
   font-size: 1.125rem;
   line-height: 1.65;
   color: #0f172a;
+}
+
+html.large-text .patient-view {
+  font-size: 1.25rem;
+}
+
+html.large-text .patient-card-title {
+  font-size: 1.5rem;
+}
+
+html.large-text .patient-header h2 {
+  font-size: 2rem;
+}
+
+html.large-text .patient-schedule h3 {
+  font-size: 1.75rem;
+}
+
+html.large-text .patient-card-body {
+  font-size: 1em;
+}
+
+html.large-text .schedule-items li {
+  font-size: 1.1em;
 }
 
 .patient-header {
@@ -550,17 +669,18 @@ header h1 {
 
 .patient-subtitle {
   margin: 0 0 0.5rem;
-  color: #334155;
+  color: #1e293b;
   font-size: 1.05rem;
 }
 
 .patient-meta {
   font-size: 0.95rem;
+  color: #1e293b;
 }
 
 .patient-loading {
   font-size: 1.25rem;
-  color: #475569;
+  color: #1e293b;
 }
 
 .patient-cards {
@@ -605,37 +725,69 @@ header h1 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #475569;
+  color: #1e293b;
 }
 
 .patient-severity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 0.2rem 0.55rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 6px;
-  border: 1px solid;
+  border: 2px solid;
+}
+
+.severity-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  font-size: 0.75em;
+  font-weight: 800;
 }
 
 .patient-severity.severity-immediate,
 .patient-severity.severity-major {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #991b1b;
+  background: #fecaca;
+  border-color: #7f1d1d;
+  color: #450a0a;
+}
+
+.patient-severity.severity-immediate .severity-icon,
+.patient-severity.severity-major .severity-icon {
+  background: #7f1d1d;
+  color: #fff;
 }
 
 .patient-severity.severity-urgent,
 .patient-severity.severity-moderate {
-  background: #ffedd5;
-  border-color: #fdba74;
-  color: #c2410c;
+  background: #fed7aa;
+  border-color: #9a3412;
+  color: #7c2d12;
+}
+
+.patient-severity.severity-urgent .severity-icon,
+.patient-severity.severity-moderate .severity-icon {
+  background: #9a3412;
+  color: #fff;
 }
 
 .patient-severity.severity-soon,
 .patient-severity.severity-minor {
-  background: #fef9c3;
-  border-color: #fde047;
-  color: #a16207;
+  background: #fef08a;
+  border-color: #713f12;
+  color: #713f12;
+}
+
+.patient-severity.severity-soon .severity-icon,
+.patient-severity.severity-minor .severity-icon {
+  background: #713f12;
+  color: #fff;
 }
 
 .patient-card-title {
@@ -646,7 +798,7 @@ header h1 {
 
 .patient-card-body {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1em;
 }
 
 .patient-card-footer {
@@ -661,7 +813,19 @@ header h1 {
 
 .provenance-tag {
   font-weight: 600;
-  color: #475569;
+  color: #1e293b;
+}
+
+.patient-view .muted {
+  color: #334155;
+}
+
+.patient-view .panel-note {
+  color: #334155;
+}
+
+.patient-view .flag-meta {
+  color: #334155;
 }
 
 .patient-schedule {
@@ -699,7 +863,7 @@ header h1 {
 .schedule-time {
   margin: 0 0 0.65rem;
   font-size: 1.2rem;
-  color: #1e40af;
+  color: #1e3a8a;
 }
 
 .schedule-items {

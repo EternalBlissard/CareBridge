@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ClinicianView from "./views/ClinicianView";
 import PatientView from "./views/PatientView";
+import { useLargeText } from "./hooks/useLargeText";
 import type { ParseResponse } from "@shared/api";
 import type { PatientNarrative } from "@shared/narrative";
 
@@ -20,6 +21,10 @@ export default function App() {
   const [parseError, setParseError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("clinician");
+  const [timelineAnnouncement, setTimelineAnnouncement] = useState("");
+  const { largeText, toggle: toggleLargeText } = useLargeText();
+  const clinicianTabRef = useRef<HTMLButtonElement>(null);
+  const patientTabRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     fetch("/api/health")
@@ -54,6 +59,7 @@ export default function App() {
     setLoading(true);
     setParseError(null);
     setResult(null);
+    setTimelineAnnouncement("");
     try {
       const res = await fetch("/api/parse", {
         method: "POST",
@@ -66,6 +72,14 @@ export default function App() {
       }
       setResult(data);
       setViewMode("clinician");
+      const { timeline, medications, redFlags } = data.story;
+      setTimelineAnnouncement(
+        `Timeline generated: ${timeline.length} event${timeline.length === 1 ? "" : "s"}, ` +
+          `${medications.length} medication${medications.length === 1 ? "" : "s"}` +
+          (redFlags.length > 0
+            ? `, ${redFlags.length} red flag${redFlags.length === 1 ? "" : "s"} detected`
+            : ""),
+      );
     } catch (err: unknown) {
       setParseError(err instanceof Error ? err.message : "Parse failed");
     } finally {
@@ -73,14 +87,26 @@ export default function App() {
     }
   }
 
+  function handleViewTabKeyDown(e: React.KeyboardEvent) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const next: ViewMode = viewMode === "clinician" ? "patient" : "clinician";
+    setViewMode(next);
+    (next === "clinician" ? clinicianTabRef : patientTabRef).current?.focus();
+  }
+
   return (
-    <main className="app">
-      <header>
+    <div className="app">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
+      <header role="banner" className="site-header">
         <h1>CareBridge</h1>
         <p className="tagline">Text in → structured timeline + med list</p>
       </header>
 
-      <aside className="safety-banner" role="note">
+      <aside className="safety-banner" role="note" aria-label="Safety notice">
         <strong>Not a diagnostic tool.</strong> Synthetic data only — do not enter real patient
         information.
         {sample && (
@@ -91,74 +117,124 @@ export default function App() {
         )}
       </aside>
 
-      <section className="status-card" aria-live="polite">
-        <h2>Server status</h2>
-        {health && <p className="ok">API connected ({health.service})</p>}
-        {healthError && <p className="error">API error: {healthError}</p>}
-        {!health && !healthError && <p>Checking API…</p>}
-      </section>
-
-      <section className="parse-section">
-        <div className="parse-header">
-          <label htmlFor="narrative">Patient narrative</label>
-          {sample && (
-            <button type="button" className="link-btn" onClick={loadSample}>
-              Reload Synthea sample
-            </button>
-          )}
-        </div>
-        <textarea
-          id="narrative"
-          rows={10}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={sample ? undefined : "Loading sample patient…"}
-        />
-        <button type="button" onClick={handleParse} disabled={loading || !text.trim()}>
-          {loading ? "Parsing…" : "Parse narrative"}
+      <nav className="a11y-toolbar" aria-label="Accessibility options">
+        <button
+          type="button"
+          className="a11y-toggle"
+          aria-pressed={largeText}
+          onClick={toggleLargeText}
+        >
+          {largeText ? "Standard text size" : "Larger text"}
         </button>
-      </section>
+      </nav>
 
-      {parseError && (
-        <p className="error" role="alert">
-          {parseError}
-        </p>
-      )}
-
-      {result && (
-        <section className="results" aria-live="polite">
-          <div className="view-toggle" role="tablist" aria-label="Result view">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === "clinician"}
-              className={viewMode === "clinician" ? "view-tab active" : "view-tab"}
-              onClick={() => setViewMode("clinician")}
-            >
-              Clinician
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === "patient"}
-              className={viewMode === "patient" ? "view-tab active" : "view-tab"}
-              onClick={() => setViewMode("patient")}
-            >
-              Patient
-            </button>
-          </div>
-
-          {viewMode === "clinician" && (
-            <ClinicianView
-              story={result.story}
-              source={result.source}
-              warning={result.warning}
-            />
-          )}
-
-          {viewMode === "patient" && <PatientView story={result.story} />}
+      <main id="main-content" tabIndex={-1}>
+        <section className="status-card" aria-labelledby="status-heading">
+          <h2 id="status-heading">Server status</h2>
+          {health && <p className="ok">API connected ({health.service})</p>}
+          {healthError && <p className="error">API error: {healthError}</p>}
+          {!health && !healthError && <p>Checking API…</p>}
         </section>
-      )}
-    </main>
+
+        <section className="parse-section" aria-labelledby="parse-heading">
+          <div className="parse-header">
+            <label htmlFor="narrative" id="parse-heading">
+              Patient narrative
+            </label>
+            {sample && (
+              <button type="button" className="link-btn" onClick={loadSample}>
+                Reload Synthea sample
+              </button>
+            )}
+          </div>
+          <textarea
+            id="narrative"
+            rows={10}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={sample ? undefined : "Loading sample patient…"}
+            aria-describedby="narrative-hint"
+          />
+          <p id="narrative-hint" className="sr-only">
+            Enter or edit a synthetic patient narrative, then parse to generate a timeline.
+          </p>
+          <button type="button" onClick={handleParse} disabled={loading || !text.trim()}>
+            {loading ? "Parsing…" : "Parse narrative"}
+          </button>
+        </section>
+
+        {parseError && (
+          <p className="error" role="alert">
+            {parseError}
+          </p>
+        )}
+
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {timelineAnnouncement}
+        </div>
+
+        {result && (
+          <section className="results" aria-labelledby="results-heading">
+            <h2 id="results-heading" className="sr-only">
+              Parsed results
+            </h2>
+            <nav
+              className="view-toggle"
+              role="tablist"
+              aria-label="Result view"
+              onKeyDown={handleViewTabKeyDown}
+            >
+              <button
+                ref={clinicianTabRef}
+                type="button"
+                role="tab"
+                id="tab-clinician"
+                aria-selected={viewMode === "clinician"}
+                aria-controls="panel-clinician"
+                tabIndex={viewMode === "clinician" ? 0 : -1}
+                className={viewMode === "clinician" ? "view-tab active" : "view-tab"}
+                onClick={() => setViewMode("clinician")}
+              >
+                Clinician
+              </button>
+              <button
+                ref={patientTabRef}
+                type="button"
+                role="tab"
+                id="tab-patient"
+                aria-selected={viewMode === "patient"}
+                aria-controls="panel-patient"
+                tabIndex={viewMode === "patient" ? 0 : -1}
+                className={viewMode === "patient" ? "view-tab active" : "view-tab"}
+                onClick={() => setViewMode("patient")}
+              >
+                Patient
+              </button>
+            </nav>
+
+            {viewMode === "clinician" && (
+              <div
+                role="tabpanel"
+                id="panel-clinician"
+                aria-labelledby="tab-clinician"
+                tabIndex={0}
+              >
+                <ClinicianView
+                  story={result.story}
+                  source={result.source}
+                  warning={result.warning}
+                />
+              </div>
+            )}
+
+            {viewMode === "patient" && (
+              <div role="tabpanel" id="panel-patient" aria-labelledby="tab-patient" tabIndex={0}>
+                <PatientView story={result.story} />
+              </div>
+            )}
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
