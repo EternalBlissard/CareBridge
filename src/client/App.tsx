@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ClinicianView from "./views/ClinicianView";
+import PatientView from "./views/PatientView";
 import type { ParseResponse } from "@shared/api";
 import type { PatientNarrative } from "@shared/narrative";
 
@@ -142,10 +143,8 @@ export default function App() {
               aria-selected={viewMode === "patient"}
               className={viewMode === "patient" ? "view-tab active" : "view-tab"}
               onClick={() => setViewMode("patient")}
-              disabled
-              title="Patient view — Phase 2 step 2"
             >
-              Patient (coming next)
+              Patient
             </button>
           </div>
 
@@ -157,9 +156,7 @@ export default function App() {
             />
           )}
 
-          {viewMode === "patient" && (
-            <p className="panel-note">Patient view ships in the next Phase 2 step.</p>
-          )}
+          {viewMode === "patient" && <PatientView story={result.story} />}
         </section>
       )}
     </main>

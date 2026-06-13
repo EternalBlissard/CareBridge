@@ -80,3 +80,35 @@ export type ClinicianBrief = {
   summary: string;
   followUpQuestions: FollowUpQuestion[];
 };
+
+export type PatientCardKind =
+  | "overview"
+  | "symptom"
+  | "medication"
+  | "safety"
+  | "interaction"
+  | "visit";
+
+export type PatientCard = {
+  id: string;
+  kind: PatientCardKind;
+  title: string;
+  body: string;
+  provenance: Provenance;
+  /** Deterministic severity/urgency — never from LLM */
+  severityLabel?: string;
+  ruleId?: string;
+};
+
+export type ScheduleItem = {
+  label: string;
+  detail?: string;
+};
+
+export type ScheduleEntry = {
+  id: string;
+  timeLabel: string;
+  sortOrder: number;
+  items: ScheduleItem[];
+  provenance: "deterministic-rule";
+};

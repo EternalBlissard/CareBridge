@@ -531,3 +531,183 @@ header h1 {
   margin: 0 0 0.5rem;
   font-size: 0.95rem;
 }
+
+/* Patient view — large type, accessible cards */
+.patient-view {
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: #0f172a;
+}
+
+.patient-header {
+  margin-bottom: 1.25rem;
+}
+
+.patient-header h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.75rem;
+}
+
+.patient-subtitle {
+  margin: 0 0 0.5rem;
+  color: #334155;
+  font-size: 1.05rem;
+}
+
+.patient-meta {
+  font-size: 0.95rem;
+}
+
+.patient-loading {
+  font-size: 1.25rem;
+  color: #475569;
+}
+
+.patient-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.patient-card {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+}
+
+.patient-card-safety,
+.patient-card-interaction {
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+
+.patient-card-medication {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+.patient-card-overview {
+  border-color: #6ee7b7;
+  background: #f0fdf9;
+}
+
+.patient-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.patient-card-kind {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+}
+
+.patient-severity {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid;
+}
+
+.patient-severity.severity-immediate,
+.patient-severity.severity-major {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.patient-severity.severity-urgent,
+.patient-severity.severity-moderate {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.patient-severity.severity-soon,
+.patient-severity.severity-minor {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #a16207;
+}
+
+.patient-card-title {
+  margin: 0 0 0.65rem;
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+
+.patient-card-body {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.patient-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.provenance-tag {
+  font-weight: 600;
+  color: #475569;
+}
+
+.patient-schedule {
+  margin-top: 1.75rem;
+  padding: 1.25rem 1.5rem;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.patient-schedule h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.schedule-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 600px) {
+  .schedule-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.schedule-slot {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+}
+
+.schedule-time {
+  margin: 0 0 0.65rem;
+  font-size: 1.2rem;
+  color: #1e40af;
+}
+
+.schedule-items {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.schedule-items li {
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
