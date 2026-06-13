@@ -1,22 +1,15 @@
 import { useEffect, useState } from "react";
+import ClinicianView from "./views/ClinicianView";
+import PatientView from "./views/PatientView";
 import type { ParseResponse } from "@shared/api";
 import type { PatientNarrative } from "@shared/narrative";
-import type { Interaction, Medication } from "@shared/types";
 
 type HealthResponse = {
   ok: boolean;
   service: string;
 };
 
-function otherDrug(med: Medication, interaction: Interaction): string {
-  const name = med.normalizedName.toLowerCase();
-  return interaction.drugA === name ? interaction.drugB : interaction.drugA;
-}
-
-function medInteractions(med: Medication, interactions: Interaction[]): Interaction[] {
-  const name = med.normalizedName.toLowerCase();
-  return interactions.filter((i) => i.drugA === name || i.drugB === name);
-}
+type ViewMode = "clinician" | "patient";
 
 export default function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -26,6 +19,7 @@ export default function App() {
   const [result, setResult] = useState<ParseResponse | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("clinician");
 
   useEffect(() => {
     fetch("/api/health")
@@ -71,14 +65,13 @@ export default function App() {
         throw new Error(data.error ?? `HTTP ${res.status}`);
       }
       setResult(data);
+      setViewMode("clinician");
     } catch (err: unknown) {
       setParseError(err instanceof Error ? err.message : "Parse failed");
     } finally {
       setLoading(false);
     }
   }
-
-  const { story } = result ?? {};
 
   return (
     <main className="app">
@@ -88,10 +81,12 @@ export default function App() {
       </header>
 
       <aside className="safety-banner" role="note">
-        <strong>Synthetic data only.</strong> Do not enter real patient information.
+        <strong>Not a diagnostic tool.</strong> Synthetic data only — do not enter real patient
+        information.
         {sample && (
           <span className="banner-detail">
-            {" "}Loaded: {sample.displayName} (synthetic sample)
+            {" "}
+            Loaded: {sample.displayName} (synthetic sample)
           </span>
         )}
       </aside>
@@ -132,115 +127,36 @@ export default function App() {
 
       {result && (
         <section className="results" aria-live="polite">
-          <p className="meta">
-            Source: <strong>{result.source}</strong>
-            {result.warning && <span className="warning"> — {result.warning}</span>}
-          </p>
+          <div className="view-toggle" role="tablist" aria-label="Result view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === "clinician"}
+              className={viewMode === "clinician" ? "view-tab active" : "view-tab"}
+              onClick={() => setViewMode("clinician")}
+            >
+              Clinician
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === "patient"}
+              className={viewMode === "patient" ? "view-tab active" : "view-tab"}
+              onClick={() => setViewMode("patient")}
+            >
+              Patient
+            </button>
+          </div>
 
-          {(story?.redFlags.length ?? 0) > 0 && (
-            <div className="panel red-flags-panel" role="alert">
-              <h2>Red flags ({story?.redFlags.length})</h2>
-              <p className="panel-note">Deterministic rules only — not AI-generated</p>
-              <ul className="flag-list">
-                {story?.redFlags.map((flag) => (
-                  <li key={flag.id} className={`flag-item urgency-${flag.urgency}`}>
-                    <span className="flag-urgency" aria-label={`Urgency: ${flag.urgency}`}>
-                      ⚠ {flag.urgency}
-                    </span>
-                    <span className="flag-message">{flag.message}</span>
-                    <span className="flag-meta">
-                      Matched: {flag.triggeringTerms.join(", ")} · rule {flag.ruleId}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {viewMode === "clinician" && (
+            <ClinicianView
+              story={result.story}
+              source={result.source}
+              warning={result.warning}
+            />
           )}
 
-          <div className="panel">
-            <h2>Timeline ({story?.timeline.length ?? 0})</h2>
-            <ul>
-              {story?.timeline.map((evt) => (
-                <li key={evt.id}>
-                  <span className="chip">{evt.type}</span>
-                  {evt.label}
-                  {evt.timeRef && <span className="muted"> · {evt.timeRef}</span>}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="panel">
-            <h2>Medications ({story?.medications.length ?? 0})</h2>
-            <p className="panel-note">Interaction severity from DDInter (deterministic lookup)</p>
-            <ul className="med-list">
-              {story?.medications.map((med) => {
-                const hits = medInteractions(med, story.interactions);
-                return (
-                  <li key={med.normalizedName} className="med-card">
-                    <div className="med-header">
-                      <strong>{med.name}</strong>
-                      {med.dose && <span className="muted"> — {med.dose}</span>}
-                      {med.frequency && <span className="muted"> ({med.frequency})</span>}
-                    </div>
-                    {hits.length > 0 && (
-                      <div className="interaction-chips">
-                        {hits.map((ix) => (
-                          <span
-                            key={ix.ruleId}
-                            className={`ix-chip severity-${ix.severity}`}
-                            title={`${ix.mechanism}${ix.management ? ` — ${ix.management}` : ""}`}
-                            role={ix.severity === "major" ? "alert" : "note"}
-                          >
-                            ⚠ {ix.severity}: {otherDrug(med, ix)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          {(story?.interactions.length ?? 0) > 0 && (
-            <div className="panel interactions-panel">
-              <h2>Drug interactions ({story?.interactions.length})</h2>
-              <ul className="flag-list">
-                {story?.interactions.map((ix) => (
-                  <li key={ix.ruleId} className={`flag-item severity-row-${ix.severity}`}>
-                    <span className={`ix-chip severity-${ix.severity}`}>
-                      {ix.severity}
-                    </span>
-                    <span className="flag-message">
-                      {ix.drugA} + {ix.drugB}
-                    </span>
-                    <span className="flag-meta">{ix.mechanism}</span>
-                    {ix.management && (
-                      <span className="flag-meta">Management: {ix.management}</span>
-                    )}
-                    <span className="flag-meta">rule {ix.ruleId} · {ix.source}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div className="panel">
-            <h2>Symptoms ({story?.symptoms.length ?? 0})</h2>
-            <ul>
-              {story?.symptoms.map((s) => (
-                <li key={s.normalizedTerm}>
-                  {s.isRedFlag && (
-                    <span className="chip chip-danger" aria-label="Red flag symptom">
-                      ⚠ red flag
-                    </span>
-                  )}
-                  {s.term}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {viewMode === "patient" && <PatientView story={result.story} />}
         </section>
       )}
     </main>
