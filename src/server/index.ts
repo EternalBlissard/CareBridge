@@ -2,6 +2,7 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import { parseRouter } from "./routes/parse.js";
+import { drugLabelRouter } from "./routes/drug-label.js";
 import { patientViewRouter } from "./routes/patient-view.js";
 import { syntheticRouter } from "./routes/synthetic.js";
 
@@ -17,6 +18,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/parse", parseRouter);
 app.use("/api/patient-view", patientViewRouter);
+app.use("/api/drug-label", drugLabelRouter);
 app.use("/api/synthetic-patient", syntheticRouter);
 
 app.listen(PORT, () => {

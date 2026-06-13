@@ -3,6 +3,11 @@ import {
   otherDrugInInteraction,
 } from "@shared/interaction-utils";
 import { buildClinicianBrief, timelineTypeStyle } from "../../rules/clinician-brief.js";
+import {
+  DrugLabelAttribution,
+  DrugLabelExcerpt,
+  useDrugLabels,
+} from "../components/DrugLabelPanel";
 import type { ParseSource } from "@shared/api";
 import type { PatientStory } from "@shared/types";
 
@@ -26,6 +31,8 @@ const PRIORITY_LABEL: Record<string, string> = {
 
 export default function ClinicianView({ story, source, warning }: ClinicianViewProps) {
   const brief = buildClinicianBrief(story);
+  const drugNames = story.medications.map((m) => m.normalizedName);
+  const fda = useDrugLabels(drugNames);
 
   return (
     <section className="clinician-view" aria-labelledby="clinician-heading">
@@ -125,10 +132,18 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
 
       <div className="panel clinician-meds">
         <h3>Medications ({story.medications.length})</h3>
-        <p className="panel-note">Interaction severity from DDInter (deterministic lookup)</p>
+        <p className="panel-note">
+          DDInter severity (deterministic) + openFDA label interaction text (live, 24h cache)
+        </p>
+        <DrugLabelAttribution
+          attribution={fda.attribution}
+          warning={fda.warning}
+          error={fda.error}
+        />
         <ul className="med-list">
           {story.medications.map((med) => {
             const hits = interactionsForMed(med, story.interactions);
+            const label = fda.byDrug.get(med.normalizedName.toLowerCase());
             return (
               <li key={med.normalizedName} className="med-card">
                 <div className="med-header">
@@ -150,6 +165,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                     ))}
                   </div>
                 )}
+                <DrugLabelExcerpt label={label} loading={fda.loading} />
               </li>
             );
           })}

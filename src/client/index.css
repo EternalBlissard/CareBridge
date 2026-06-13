@@ -711,3 +711,49 @@ header h1 {
   margin-bottom: 0.5rem;
   font-size: 1.05rem;
 }
+
+.fda-label {
+  margin: 0.65rem 0 0;
+  padding: 0.75rem 0.85rem;
+  background: #f8fafc;
+  border-left: 3px solid #64748b;
+  border-radius: 0 8px 8px 0;
+}
+
+.fda-label.loading {
+  background: transparent;
+  border: none;
+  padding: 0.35rem 0;
+}
+
+.fda-label-heading {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.fda-source {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.fda-excerpt {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.fda-warning {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+}
+
+.fda-attribution {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+}
