@@ -84,7 +84,7 @@ function fromCache(
     genericNames: cached.genericNames,
     brandNames: cached.brandNames,
     excerpt,
-    source: stale ? "openfda-cache" : "openfda-cache",
+    source: "openfda-cache",
     attribution: OPENFDA_ATTRIBUTION,
     warning: stale ? "Showing cached FDA label — live lookup rate-limited." : undefined,
   };
