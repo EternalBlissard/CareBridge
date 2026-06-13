@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSpeechNarration } from "../hooks/useSpeechNarration";
 import type { PatientViewResponse } from "@shared/api";
 import type { PatientCard, PatientStory } from "@shared/types";
 
@@ -36,6 +37,9 @@ export default function PatientView({ story }: PatientViewProps) {
   const [data, setData] = useState<PatientViewResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const narration = useSpeechNarration();
+  const { supported, state, activeId, speakCard, speakAll, pause, resume, stop, isSpeaking, isPaused, isActive } =
+    narration;
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +72,8 @@ export default function PatientView({ story }: PatientViewProps) {
     };
   }, [story]);
 
+  useEffect(() => () => stop(), [stop]);
+
   if (loading) {
     return (
       <section className="patient-view" aria-live="polite" aria-busy="true">
@@ -84,6 +90,13 @@ export default function PatientView({ story }: PatientViewProps) {
     );
   }
 
+  const narrationStatus =
+    state === "speaking"
+      ? "Narration in progress"
+      : state === "paused"
+        ? "Narration paused"
+        : "";
+
   return (
     <section className="patient-view" aria-labelledby="patient-heading">
       <header className="patient-header">
@@ -95,6 +108,48 @@ export default function PatientView({ story }: PatientViewProps) {
           Rewrite source: <strong>{data.source}</strong>
           {data.warning && <span className="warning"> — {data.warning}</span>}
         </p>
+
+        {supported && (
+          <div className="tts-toolbar" role="group" aria-label="Text-to-speech controls">
+            <button
+              type="button"
+              className="tts-btn tts-btn-primary"
+              onClick={() => speakAll(data.cards, data.schedule)}
+              disabled={isActive && activeId === "__all__"}
+              aria-describedby="tts-hint"
+            >
+              Narrate everything
+            </button>
+            {isSpeaking && (
+              <button type="button" className="tts-btn" onClick={pause}>
+                Pause
+              </button>
+            )}
+            {isPaused && (
+              <button type="button" className="tts-btn" onClick={resume}>
+                Resume
+              </button>
+            )}
+            {isActive && (
+              <button type="button" className="tts-btn" onClick={stop}>
+                Stop
+              </button>
+            )}
+            <p id="tts-hint" className="tts-hint">
+              Uses your device voice — works offline. Long text is split for browser limits.
+            </p>
+          </div>
+        )}
+
+        {!supported && (
+          <p className="tts-unsupported" role="status">
+            Text-to-speech is not available in this browser.
+          </p>
+        )}
+
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {narrationStatus}
+        </div>
       </header>
 
       <div className="patient-cards" role="list" aria-label="Health summary cards">
@@ -103,12 +158,14 @@ export default function PatientView({ story }: PatientViewProps) {
             ? SEVERITY_DISPLAY[card.severityLabel]
             : undefined;
           const majorAlert = isMajorAlert(card);
+          const isReading = activeId === card.id && isActive;
 
           return (
             <article
               key={card.id}
-              className={`patient-card patient-card-${card.kind}`}
+              className={`patient-card patient-card-${card.kind}${isReading ? " patient-card-reading" : ""}`}
               role={majorAlert ? "alert" : "listitem"}
+              aria-busy={isReading}
             >
               <div className="patient-card-header">
                 <span className="patient-card-kind">{KIND_LABEL[card.kind]}</span>
@@ -131,6 +188,17 @@ export default function PatientView({ story }: PatientViewProps) {
                   {card.provenance === "ai-generated" ? "AI-generated" : "Rule-based"}
                 </span>
                 {card.ruleId && <span className="flag-meta">rule {card.ruleId}</span>}
+                {supported && (
+                  <button
+                    type="button"
+                    className="tts-read-btn"
+                    onClick={() => speakCard(card)}
+                    aria-pressed={isReading}
+                    aria-label={`Read this card: ${card.title}`}
+                  >
+                    {isReading ? "Reading…" : "Read this"}
+                  </button>
+                )}
               </footer>
             </article>
           );
