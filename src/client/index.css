@@ -14,7 +14,7 @@ body {
 }
 
 .app {
-  max-width: 720px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
@@ -298,4 +298,236 @@ header h1 {
 
 .severity-row-major {
   border-color: #fca5a5;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.view-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.view-tab.active {
+  background: #1e40af;
+  color: #fff;
+  border-color: #1e40af;
+}
+
+.view-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clinician-view h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.clinician-header {
+  margin-bottom: 1rem;
+}
+
+.clinician-header h2 {
+  margin: 0 0 0.25rem;
+}
+
+.clinician-subtitle {
+  margin: 0 0 0.5rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.rf-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.rf-chip {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.rf-chip-icon {
+  flex-shrink: 0;
+}
+
+.rf-chip-urgency {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+}
+
+.rf-chip-text {
+  font-weight: 500;
+}
+
+.rf-chip-immediate {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.rf-chip-urgent {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.rf-chip-soon {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #a16207;
+}
+
+.clinician-summary .summary-text {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.timeline-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.timeline-marker {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+.timeline-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.timeline-type-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.timeline-index {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.timeline-label {
+  margin: 0;
+  font-weight: 600;
+}
+
+.timeline-hint {
+  margin: 0.25rem 0 0;
+}
+
+.follow-up-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.follow-up-item {
+  padding: 0.85rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.follow-up-item.priority-high {
+  border-color: #fca5a5;
+  background: #fffbfb;
+}
+
+.priority-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  margin-bottom: 0.35rem;
+}
+
+.priority-badge.priority-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.priority-badge.priority-medium {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.priority-badge.priority-low {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.follow-up-question {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+}
+
+.follow-up-rationale {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.clinician-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.detail-block {
+  margin-top: 1rem;
+}
+
+.detail-block h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
 }

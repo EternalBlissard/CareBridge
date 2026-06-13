@@ -64,3 +64,19 @@ export type PatientStory = {
   redFlags: RedFlag[];
   interactions: Interaction[];
 };
+
+export type FollowUpPriority = "high" | "medium" | "low";
+
+export type FollowUpQuestion = {
+  id: string;
+  question: string;
+  rationale: string;
+  priority: FollowUpPriority;
+  provenance: "deterministic-rule";
+  ruleId: string;
+};
+
+export type ClinicianBrief = {
+  summary: string;
+  followUpQuestions: FollowUpQuestion[];
+};

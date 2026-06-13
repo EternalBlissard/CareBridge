@@ -1,6 +1,8 @@
 import { DDINTER_SOURCE, lookupInteraction } from "./ddinter-loader.js";
 import type { Interaction, Medication } from "../shared/types.js";
 
+export { interactionsForMed, otherDrugInInteraction } from "../shared/interaction-utils.js";
+
 function normalizeDrug(name: string): string {
   return name.toLowerCase().trim();
 }
@@ -36,20 +38,4 @@ export function checkInteractions(medications: Medication[]): Interaction[] {
 
   const severityOrder = { major: 0, moderate: 1, minor: 2 } as const;
   return found.sort((x, y) => severityOrder[x.severity] - severityOrder[y.severity]);
-}
-
-export function interactionsForMed(
-  med: Medication,
-  interactions: Interaction[],
-): Interaction[] {
-  const name = normalizeDrug(med.normalizedName);
-  return interactions.filter((i) => i.drugA === name || i.drugB === name);
-}
-
-export function otherDrugInInteraction(
-  med: Medication,
-  interaction: Interaction,
-): string {
-  const name = normalizeDrug(med.normalizedName);
-  return interaction.drugA === name ? interaction.drugB : interaction.drugA;
 }
