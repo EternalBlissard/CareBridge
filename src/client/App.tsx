@@ -91,7 +91,7 @@ export default function App() {
         <strong>Synthetic data only.</strong> Do not enter real patient information.
         {sample && (
           <span className="banner-detail">
-            {" "}Loaded: {sample.displayName} (Synthea {sample.syntheaPatientId?.slice(0, 8)}…)
+            {" "}Loaded: {sample.displayName} (synthetic sample)
           </span>
         )}
       </aside>

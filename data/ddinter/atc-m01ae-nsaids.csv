@@ -1,6 +1,4 @@
 drug_a,drug_b,severity,mechanism,management,rule_id
-ibuprofen,warfarin,major,NSAIDs inhibit platelet function and may cause GI bleeding; combined with warfarin bleeding risk is substantially increased,Avoid NSAIDs if possible; use acetaminophen alternative; monitor INR and signs of bleeding,ddi-ddinter-m01ae-b01ac-001
 ibuprofen,lisinopril,moderate,NSAIDs may reduce antihypertensive effect and impair renal function especially with ACE inhibitors,Monitor blood pressure and renal function; limit duration,ddi-ddinter-m01ae-c09aa-001
 ibuprofen,metformin,moderate,NSAIDs may increase risk of lactic acidosis in renal impairment via reduced renal perfusion,Monitor renal function; stay hydrated,ddi-ddinter-m01ae-a10ba-001
 ibuprofen,atorvastatin,minor,Low clinical significance for most patients,Standard monitoring,ddi-ddinter-m01ae-c10aa-001
-naproxen,warfarin,major,NSAIDs increase bleeding risk when combined with anticoagulants,Avoid combination; monitor INR closely,ddi-ddinter-m01ae-b01ac-002

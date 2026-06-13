@@ -69,3 +69,24 @@ npm run test:token
 npm run build    # client → dist/client/
 npm run preview  # preview production build
 ```
+
+## Data sources & attribution
+
+**Synthetic data only — never enter real patient information.**
+
+- **Sample patient** (`data/synthea/`): hand-authored synthetic narrative
+  modeled on [MITRE Synthea](https://synthetichealth.github.io/synthea/)
+  output. Not a real Synthea export and not real patient data.
+- **Drug-interaction severity** (`data/ddinter/`): hand-curated demo subset
+  informed by [DDInter 2.0](https://pubmed.ncbi.nlm.nih.gov/39180399/)
+  (ATC B01AC + M01AE). Not the DDInter download — swap in the real export
+  once its license is confirmed.
+- Red-flag urgency and interaction severity come from deterministic rules
+  and bundled lookups, never the LLM.
+
+## LLM response cache
+
+Validated LLM parses are cached in `.cache/llm-parse/` keyed by
+SHA-256 of prompt version + model + input text. Re-parsing the same
+narrative hits the cache and uses zero GitHub Models quota — pre-warm
+demo narratives by parsing them once.

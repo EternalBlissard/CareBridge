@@ -23,21 +23,59 @@ const CSV_FILES = [
   "atc-m01ae-nsaids.csv",
 ] as const;
 
-function parseCsv(content: string): DdiRow[] {
-  const lines = content.trim().split("\n");
-  const header = lines[0]?.split(",") ?? [];
+/** RFC 4180-style line parser: quoted fields may contain commas and "" escapes. */
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else if (ch === '"' && current === "") {
+      inQuotes = true;
+    } else if (ch === ",") {
+      fields.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  fields.push(current);
+  return fields;
+}
+
+function parseCsv(content: string, filename: string): DdiRow[] {
+  const lines = content.trim().split(/\r?\n/);
+  const header = lines[0] ? parseCsvLine(lines[0]) : [];
   const rows: DdiRow[] = [];
+  let skipped = 0;
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line?.trim()) continue;
-    const values = line.split(",");
+    const values = parseCsvLine(line);
     const record: Record<string, string> = {};
     header.forEach((col, idx) => {
       record[col] = values[idx] ?? "";
     });
     const parsed = DdiRowSchema.safeParse(record);
     if (parsed.success) rows.push(parsed.data);
+    else skipped++;
+  }
+
+  if (skipped > 0) {
+    console.warn(`[ddinter] ${filename}: skipped ${skipped} malformed row(s)`);
   }
   return rows;
 }
@@ -50,7 +88,7 @@ function loadAllRows(): DdiRow[] {
   const all: DdiRow[] = [];
   for (const file of CSV_FILES) {
     const raw = readFileSync(join(DATA_DIR, file), "utf-8");
-    all.push(...parseCsv(raw));
+    all.push(...parseCsv(raw, file));
   }
   return all;
 }
@@ -59,11 +97,20 @@ const rows = loadAllRows();
 
 const lookup = new Map<string, DdiRow>();
 for (const row of rows) {
-  lookup.set(pairKey(row.drug_a, row.drug_b), row);
+  const key = pairKey(row.drug_a, row.drug_b);
+  const existing = lookup.get(key);
+  if (existing && existing.rule_id !== row.rule_id) {
+    console.warn(
+      `[ddinter] duplicate pair ${key}: ${row.rule_id} overrides ${existing.rule_id}`,
+    );
+  }
+  lookup.set(key, row);
 }
 
 export const DDINTER_SNAPSHOT = "2026-06-12";
-export const DDINTER_SOURCE = `DDInter subset (ATC B01AC + M01AE) snapshot ${DDINTER_SNAPSHOT}`;
+// Hand-curated demo subset informed by DDInter 2.0 — not the DDInter download.
+// Swap in the real export (license pending) before claiming DDInter as the source.
+export const DDINTER_SOURCE = `Curated DDI subset (DDInter-informed; ATC B01AC + M01AE) snapshot ${DDINTER_SNAPSHOT}`;
 
 export function lookupInteraction(
   drugA: string,

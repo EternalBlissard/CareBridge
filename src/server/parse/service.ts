@@ -1,12 +1,15 @@
 import type OpenAI from "openai";
 import { checkInteractions } from "../../rules/check-interactions.js";
 import { enrichStoryWithRedFlags } from "../../rules/detect-red-flags.js";
+import type { ParseSource } from "../../shared/api.js";
 import type { PatientStory } from "../../shared/types.js";
 import { createLlmClient, PARSE_MODEL } from "../llm/client.js";
+import { getCachedParse, parseCacheKey, setCachedParse } from "./cache.js";
 import {
   buildParseUserPrompt,
   buildRepairUserPrompt,
   PARSE_SYSTEM_PROMPT,
+  PROMPT_VERSION,
 } from "./prompt.js";
 import {
   LlmParseResultSchema,
@@ -17,7 +20,7 @@ import { skeletonParse } from "./skeleton.js";
 /** ~8000-token input cap (conservative chars/token estimate). */
 const MAX_INPUT_CHARS = 24_000;
 
-export type ParseSource = "llm" | "llm-repair" | "skeleton";
+export type { ParseSource };
 
 export type ParseResult = {
   story: PatientStory;
@@ -92,6 +95,16 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
     ? "Input truncated to fit model context limit."
     : undefined;
 
+  const cacheKey = parseCacheKey(PROMPT_VERSION, PARSE_MODEL, text);
+  const cached = getCachedParse(cacheKey);
+  if (cached) {
+    return {
+      story: finalizeStory(text, cached),
+      source: "llm-cache",
+      warning: truncationWarning,
+    };
+  }
+
   let client: OpenAI;
   try {
     client = createLlmClient();
@@ -110,6 +123,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
 
     const first = tryValidateJson(raw);
     if (first.ok) {
+      setCachedParse(cacheKey, first.data);
       return {
         story: finalizeStory(text, first.data),
         source: "llm",
@@ -124,6 +138,7 @@ export async function parseNarrative(rawText: string): Promise<ParseResult> {
     if (repairRaw) {
       const repaired = tryValidateJson(repairRaw);
       if (repaired.ok) {
+        setCachedParse(cacheKey, repaired.data);
         return {
           story: finalizeStory(text, repaired.data),
           source: "llm-repair",
