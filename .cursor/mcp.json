@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "carebridge": {
+      "command": "/home/wolfie/hackathons/agent-hacks/CareBridge/node_modules/.bin/tsx",
+      "args": ["/home/wolfie/hackathons/agent-hacks/CareBridge/src/mcp/server.ts"],
+      "cwd": "/home/wolfie/hackathons/agent-hacks/CareBridge"
+    }
+  }
+}
