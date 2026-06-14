@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DegradedBanner from "../components/DegradedBanner";
+import { GroundedDrugInfo } from "../components/GroundedDrugInfo";
 import { PatientCard } from "../design-system/components/PatientCard";
 import { type SeverityLevel } from "../design-system/components/SeverityChip";
 import { useSpeechNarration } from "../hooks/useSpeechNarration";
@@ -190,6 +191,8 @@ export default function PatientView({ story }: PatientViewProps) {
           );
         })}
       </ul>
+
+      <GroundedDrugInfo medications={story.medications} />
 
       {data.schedule.length > 0 && (
         <section className="patient-schedule" aria-labelledby="schedule-heading">

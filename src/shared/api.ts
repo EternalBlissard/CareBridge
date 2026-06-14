@@ -35,3 +35,23 @@ export type DrugLabelsResponse = {
   attribution: string;
   warning?: string;
 };
+
+// Microsoft Foundry IQ — agentic knowledge retrieval over the openFDA labels.
+// "foundry-iq" = grounded answer from the knowledge base; "fallback-fda" = the
+// deterministic cached label excerpt shown when Foundry IQ is off/unavailable.
+export type GroundedSource = "foundry-iq" | "fallback-fda" | "unavailable";
+
+export type GroundedCitation = {
+  /** Source document the answer was grounded in (e.g. the FDA label file). */
+  title: string;
+  /** Optional supporting snippet returned by the retrieval engine. */
+  snippet?: string;
+};
+
+export type GroundedDrugInfoResponse = {
+  answer: string;
+  citations: GroundedCitation[];
+  source: GroundedSource;
+  attribution: string;
+  warning?: string;
+};
