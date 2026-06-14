@@ -4,6 +4,8 @@ import PatientView from "./views/PatientView";
 import Landing from "./views/Landing";
 import DegradedBanner from "./components/DegradedBanner";
 import SafetyBanner from "./components/SafetyBanner";
+import HowItWorks from "./components/HowItWorks";
+import ProvenanceLegend from "./components/ProvenanceLegend";
 import { Button } from "./design-system/components/Button";
 import { TextArea } from "./design-system/components/TextArea";
 import { Select } from "./design-system/components/Select";
@@ -169,6 +171,8 @@ export default function App() {
       </nav>
 
       <main id="main-content" tabIndex={-1}>
+        <HowItWorks />
+
         <section className="status-card" aria-labelledby="status-heading">
           <h2 id="status-heading">Server status</h2>
           {health && <p className="ok">API connected ({health.service})</p>}
@@ -257,6 +261,8 @@ export default function App() {
               ]}
               style={{ margin: "var(--sp-4) 0" }}
             />
+
+            <ProvenanceLegend />
 
             {viewMode === "clinician" && (
               <div role="tabpanel" aria-label="Clinician view" tabIndex={0}>
