@@ -1,6 +1,7 @@
 import { DefaultAzureCredential } from "@azure/identity";
 import type { GroundedCitation, GroundedDrugInfoResponse } from "../../shared/api.js";
 import { lookupDrugLabels } from "../openfda/service.js";
+import { getCachedGrounded, groundedCacheKey, setCachedGrounded } from "./cache.js";
 
 /**
  * Microsoft Foundry IQ integration — agentic knowledge retrieval.
@@ -129,6 +130,12 @@ export async function groundedDrugInfo(
     return fallback(drugs, "Foundry IQ not configured. Showing FDA label excerpt.");
   }
 
+  // Cache successful grounded answers by (agent + question + drugs) — a warmed
+  // demo click returns instantly, and repeat asks skip the ~15s retrieval call.
+  const cacheKey = groundedCacheKey(agentName, question, drugs);
+  const cached = getCachedGrounded(cacheKey);
+  if (cached) return cached;
+
   try {
     const token = await getCredential().getToken(TOKEN_SCOPE);
     const res = await fetch(`${endpoint.replace(/\/$/, "")}/openai/v1/responses`, {
@@ -156,12 +163,14 @@ export async function groundedDrugInfo(
       return fallback(drugs, "Foundry IQ returned no answer. Showing FDA label excerpt.");
     }
 
-    return {
+    const result: GroundedDrugInfoResponse = {
       answer,
       citations: extractCitations(payload),
       source: "foundry-iq",
       attribution: ATTRIBUTION,
     };
+    setCachedGrounded(cacheKey, result);
+    return result;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "unknown error";
     return fallback(drugs, `Foundry IQ unavailable (${msg}). Showing FDA label excerpt.`);
