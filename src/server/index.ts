@@ -5,6 +5,7 @@ import { parseRouter } from "./routes/parse.js";
 import { drugLabelRouter } from "./routes/drug-label.js";
 import { patientViewRouter } from "./routes/patient-view.js";
 import { syntheticRouter } from "./routes/synthetic.js";
+import { groundedDrugInfoRouter } from "./routes/grounded-drug-info.js";
 import { PARSE_DEGRADED_MSG } from "./errors.js";
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -21,6 +22,7 @@ app.use("/api/parse", parseRouter);
 app.use("/api/patient-view", patientViewRouter);
 app.use("/api/drug-label", drugLabelRouter);
 app.use("/api/synthetic-patient", syntheticRouter);
+app.use("/api/grounded-drug-info", groundedDrugInfoRouter);
 
 app.use(
   (

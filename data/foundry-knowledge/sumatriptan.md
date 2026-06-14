@@ -1,0 +1,9 @@
+# Sumatriptan
+
+**Generic names:** SUMATRIPTAN
+**Brand names:** Sumatriptan
+**Source:** openFDA Drug Label API (api.fda.gov) — public-domain FDA data.
+
+## Drug interactions (FDA label)
+
+7 DRUG INTERACTIONS 7.1 Ergot-Containing Drugs Ergot-containing drugs have been reported to cause prolonged vasospastic reactions. Because these effects may be additive, use of ergotamine-containing or ergot-type medications (like dihydroergotamine or methysergide) and sumatriptan injection within 24 hours of each other is contraindicated. 7.2 Monoamine Oxidase-A Inhibitors MAO-A inhibitors increase systemic exposure by 2-fold. Therefore, the use of Sumatriptan injection in patients receiving MAO-A inhibitors is contraindicated [see Clinical Pharmacology (12.3)]. 7.3 Other 5-HT 1 Agonists Because their vasospastic effects may be additive, coadministration of Sumatriptan injection and other 5-HT 1 agonists (e.g., triptans) within 24 hours of each other is contraindicated. 7.4 Selective Serotonin Reuptake Inhibitors /Serotonin Norepinephrine Reuptake Inhibitors and Serotonin Syndrome Cases of serotonin syndrome have been reported during coadministration of triptans and SSRIs, SNRIs, TCAs, and MAO inhibitors [see Warnings and Precautions (5.7)].

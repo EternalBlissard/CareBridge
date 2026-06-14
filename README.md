@@ -16,7 +16,7 @@ flowchart TD
   end
 
   subgraph Server["Express API — PAT stays server-side"]
-    R["Routes<br/>/parse · /patient-view<br/>/drug-label · /synthetic-patient"]
+    R["Routes<br/>/parse · /patient-view<br/>/drug-label · /synthetic-patient<br/>/grounded-drug-info"]
     AILAYER["AI layer — language only<br/>extract structure · plain-language rewrite"]
     ZOD["Zod validate<br/>+ deterministic skeleton fallback"]
     RULES["Deterministic rules — never the LLM<br/>red flags · DDInter severity<br/>clinician brief · schedule"]
@@ -39,6 +39,13 @@ flowchart TD
     COP -->|"mcp.json · stdio"| MCP
   end
 
+  subgraph IQ["Microsoft Foundry IQ — agentic knowledge retrieval"]
+    AGENT["caring-agent (gpt-4.1-mini)<br/>grounded · cited answers"]
+    KB["Knowledge base<br/>agentic retrieval engine"]
+    SRCH["Azure AI Search<br/>vector + semantic"]
+    AGENT --> KB --> SRCH
+  end
+
   UI -->|"fetch /api/*"| R
   AILAYER -->|"Bearer PAT"| GM
   RULES -->|"severity"| DDI
@@ -46,6 +53,8 @@ flowchart TD
   R -->|"sample narratives"| SYN
   MCP -.->|"reuses"| RULES
   MCP -.->|"reuses"| FDA
+  R -->|"/grounded-drug-info · Entra"| AGENT
+  SRCH -.->|"indexed openFDA label docs"| FDA
 
   classDef ai fill:#e0e7ff,stroke:#6366f1,color:#312e81;
   classDef rule fill:#ecfdf5,stroke:#10b981,color:#065f46;
@@ -55,17 +64,37 @@ flowchart TD
   class RULES,ZOD,DDI rule;
   class FDA,SYN ext;
   class COP,MCP cop;
+  classDef iq fill:#f5f3ff,stroke:#8b5cf6,color:#4c1d95;
+  class AGENT,KB,SRCH iq;
 ```
 
 **Legend** — 🟦 indigo = **AI / language only** (gpt-4o-mini: structure + rewrite) ·
 🟩 green = **deterministic safety** (red flags + interaction severity, **never the LLM**) ·
-🟧 orange = **GitHub Copilot + MCP** · ⬜ neutral = external data (CC0 / bundled / synthetic).
+🟧 orange = **GitHub Copilot + MCP** · 🟪 violet = **Microsoft Foundry IQ** (grounded, cited drug answers) ·
+⬜ neutral = external data (CC0 / bundled / synthetic).
 
 **How GitHub Copilot was used (Creative Apps track):** Plan + agent mode scaffolded the
 app and were grounded on every request by `.github/copilot-instructions.md`; the
 CareBridge **MCP server** exposes the four deterministic safety tools to Copilot agent
 mode (config in `.vscode/mcp.json` / `.cursor/mcp.json`), reusing the same rule engine
 the app does — so the agent and the product share one safety core.
+
+**Microsoft IQ — Foundry IQ (required track integration).** The patient view's
+*"Ask about your medications"* feature is grounded by **Microsoft Foundry IQ** —
+agentic knowledge retrieval over the openFDA drug labels. The labels are exported
+to Markdown (`npm run foundry:export` → `data/foundry-knowledge/`) and indexed into
+a Foundry IQ **knowledge base** (Azure AI Search). A Foundry **agent**
+(`caring-agent`) answers medication questions strictly from that knowledge base and
+returns **cited** answers; the UI renders each source as a citation chip (e.g.
+`warfarin.md`) under a `Grounded · Foundry IQ` provenance tag. Consistent with the
+safety model, Foundry IQ produces *explanatory language only* — interaction
+**severity** and **red-flag urgency** stay deterministic (DDInter + the rule engine)
+and are never decided by retrieval. If Foundry IQ is disabled (`FOUNDRY_IQ` unset) or
+unavailable, the server degrades to the deterministic cached FDA-label excerpt, so
+the demo never hard-fails. Auth is Microsoft Entra via `az login` (server-side only);
+see `.env.example` for `AZURE_AI_PROJECT_ENDPOINT` / `FOUNDRY_AGENT_NAME`.
+
+![CareBridge patient view — an "Ask about your medications" answer grounded by Microsoft Foundry IQ, tagged "Grounded · Foundry IQ" with FDA-label citation chips](assets/Foundary_grounding_in_app.png)
 
 > 📐 Static export for slides / portal upload: [`assets/architecture.png`](assets/architecture.png)
 
