@@ -1,0 +1,53 @@
+/* ============================================================
+   CareBridge — Typography tokens
+
+   The product ships with a system-ui stack. For the design system
+   we adopt PUBLIC SANS as the brand face: a neutral, highly legible
+   grotesque commissioned by the US government (USWDS) specifically
+   for accessible public-service interfaces — squarely on-brand for an
+   accessibility-first clinical tool. system-ui remains the fallback,
+   so anything built here degrades gracefully to the original look.
+
+   ⚠ SUBSTITUTION: the original codebase used `system-ui` only.
+   Public Sans is our recommended upgrade — see readme.md.
+   ============================================================ */
+
+:root {
+  /* ---- Families --------------------------------------- */
+  --font-sans: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* ---- Base size (the product runs at 18px; large-text 22px) */
+  --font-base: 18px;
+  --font-base-large: 22px;     /* html.large-text accessibility mode */
+
+  /* ---- Type scale (rem, relative to 18px base) -------- */
+  --fs-xs: 0.72rem;    /* provenance tags, micro-labels */
+  --fs-sm: 0.85rem;    /* meta, captions */
+  --fs-body: 1rem;     /* body copy */
+  --fs-md: 1.05rem;    /* lead body, large-text body */
+  --fs-lg: 1.2rem;     /* card titles, sub-headings */
+  --fs-xl: 1.35rem;    /* patient card titles */
+  --fs-2xl: 1.6rem;    /* section titles */
+  --fs-3xl: 2rem;      /* page H1 */
+  --fs-display: clamp(2.5rem, 6vw, 4rem); /* @kind font */
+
+  /* ---- Weights ---------------------------------------- */
+  --fw-regular: 400;   /* @kind font */
+  --fw-medium: 500;    /* @kind font */
+  --fw-semibold: 600;  /* @kind font */
+  --fw-bold: 700;      /* @kind font */
+  --fw-extrabold: 800; /* @kind font */
+
+  /* ---- Line heights ----------------------------------- */
+  --lh-tight: 1.05;    /* @kind other */
+  --lh-snug: 1.35;     /* @kind other */
+  --lh-normal: 1.5;    /* @kind other */
+  --lh-relaxed: 1.65;  /* @kind other */
+
+  /* ---- Letter spacing --------------------------------- */
+  --ls-tight: -0.02em; /* @kind font */
+  --ls-flat: -0.01em;  /* @kind font */
+  --ls-wide: 0.04em;   /* @kind font */
+  --ls-wider: 0.08em;  /* @kind font */
+}

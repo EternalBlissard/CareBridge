@@ -1,0 +1,6 @@
+/* CareBridge design-system token barrel — import this one file. */
+@import "./fonts.css";
+@import "./colors.css";
+@import "./typography.css";
+@import "./spacing.css";
+@import "./base.css";

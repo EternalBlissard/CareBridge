@@ -1,3 +1,5 @@
+import { Button } from "../design-system/components/Button";
+
 type LandingProps = {
   onLaunch: () => void;
   /** Optional demo video URL — secondary CTA hidden until provided. */
@@ -40,7 +42,8 @@ const FEATURES: Feature[] = [
 export default function Landing({ onLaunch, videoUrl }: LandingProps) {
   return (
     <div className="landing">
-      <section className="hero" aria-labelledby="hero-heading">
+      <main>
+        <section className="hero" aria-labelledby="hero-heading">
         <div className="landing-wrap">
           <p className="hero-eyebrow">Microsoft Agents League · Creative Apps</p>
           <h1 id="hero-heading" className="hero-title">
@@ -52,19 +55,28 @@ export default function Landing({ onLaunch, videoUrl }: LandingProps) {
             checks the AI never gets to override.
           </p>
           <div className="hero-cta">
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              onClick={onLaunch}
-            >
+            <Button variant="primary" size="lg" onClick={onLaunch}>
               Try the live demo
-            </button>
+            </Button>
             {videoUrl && (
               <a
-                className="btn btn-secondary btn-lg"
+                className="hero-cta-link"
                 href={videoUrl}
                 target="_blank"
                 rel="noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0.85rem 1.7rem",
+                  fontSize: "1.05rem",
+                  fontWeight: 600,
+                  borderRadius: "var(--r-md)",
+                  border: "2px solid var(--cb-brand)",
+                  background: "var(--cb-surface)",
+                  color: "var(--cb-brand-dark)",
+                  textDecoration: "none",
+                }}
               >
                 Watch the demo video
               </a>
@@ -132,15 +144,12 @@ export default function Landing({ onLaunch, videoUrl }: LandingProps) {
             A Synthea-style sample is pre-loaded — parse it, switch between the
             clinician and patient views, and let the screen reader narrate.
           </p>
-          <button
-            type="button"
-            className="btn btn-primary btn-lg"
-            onClick={onLaunch}
-          >
+          <Button variant="primary" size="lg" onClick={onLaunch}>
             Try the live demo
-          </button>
+          </Button>
         </div>
       </section>
+      </main>
 
       <footer className="landing-footer">
         <div className="landing-wrap">

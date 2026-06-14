@@ -1,0 +1,84 @@
+/* ============================================================
+   CareBridge — base element styles & accessibility primitives
+   Applied globally once tokens are loaded.
+   ============================================================ */
+
+:root {
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  line-height: var(--lh-normal);
+  color: var(--cb-ink);
+  background: var(--cb-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Accessibility: larger-text mode toggled on <html> */
+html.large-text {
+  font-size: var(--font-base-large);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+/* Focus is always visible and high-contrast — never removed. */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 3px solid var(--cb-focus-ring);
+  outline-offset: var(--cb-focus-offset);
+}
+
+/* Restrained motion; fully disabled when the user prefers it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Screen-reader-only content (kept in the accessibility tree). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link — first focusable element on full screens. */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 1000;
+  padding: 0.75rem 1.25rem;
+  background: var(--cb-ink);
+  color: #fff;
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  border-radius: 0 0 8px 8px;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+a {
+  color: var(--link);
+}

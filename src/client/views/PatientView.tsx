@@ -1,39 +1,30 @@
 import { useEffect, useState } from "react";
 import DegradedBanner from "../components/DegradedBanner";
-import { ProvenanceTag } from "../components/ProvenanceTag";
+import { PatientCard } from "../design-system/components/PatientCard";
+import { type SeverityLevel } from "../design-system/components/SeverityChip";
 import { useSpeechNarration } from "../hooks/useSpeechNarration";
 import { friendlyFetchError } from "../utils/errors";
 import type { PatientViewResponse } from "@shared/api";
-import type { PatientCard, PatientStory } from "@shared/types";
+import type { PatientStory } from "@shared/types";
 
 type PatientViewProps = {
   story: PatientStory;
 };
 
-const KIND_LABEL: Record<PatientCard["kind"], string> = {
-  overview: "Overview",
-  symptom: "Symptom",
-  medication: "Medication",
-  safety: "Safety alert",
-  interaction: "Medication safety",
-  visit: "Visit",
-};
+const SEVERITY_LEVELS = new Set<SeverityLevel>([
+  "immediate",
+  "urgent",
+  "soon",
+  "major",
+  "moderate",
+  "minor",
+]);
 
-const SEVERITY_DISPLAY: Record<string, { short: string; full: string }> = {
-  immediate: { short: "Immediate", full: "Immediate attention needed" },
-  urgent: { short: "Urgent", full: "Urgent — contact care team" },
-  major: { short: "Major", full: "Major interaction warning" },
-  moderate: { short: "Moderate", full: "Moderate concern" },
-  minor: { short: "Minor", full: "Minor note" },
-  soon: { short: "Soon", full: "Follow up soon" },
-};
-
-function isMajorAlert(card: PatientCard): boolean {
-  if (card.kind === "safety") return true;
-  if (card.kind === "interaction") {
-    return card.severityLabel === "major" || card.severityLabel === "immediate";
-  }
-  return false;
+/** Narrow the free-text severity label onto the design-system severity ramp. */
+function severityLevel(value?: string): SeverityLevel | undefined {
+  return value && SEVERITY_LEVELS.has(value as SeverityLevel)
+    ? (value as SeverityLevel)
+    : undefined;
 }
 
 export default function PatientView({ story }: PatientViewProps) {
@@ -162,55 +153,43 @@ export default function PatientView({ story }: PatientViewProps) {
         </div>
       </header>
 
-      <div className="patient-cards" role="list" aria-label="Health summary cards">
+      <ul
+        className="patient-cards"
+        aria-label="Health summary cards"
+        style={{ listStyle: "none", margin: "var(--sp-4) 0 0", padding: 0, display: "grid", gap: "var(--sp-4)" }}
+      >
         {data.cards.map((card) => {
-          const severity = card.severityLabel
-            ? SEVERITY_DISPLAY[card.severityLabel]
-            : undefined;
-          const majorAlert = isMajorAlert(card);
           const isReading = activeId === card.id && isActive;
 
           return (
-            <article
-              key={card.id}
-              className={`patient-card patient-card-${card.kind}${isReading ? " patient-card-reading" : ""}`}
-              role={majorAlert ? "alert" : "listitem"}
-              aria-busy={isReading}
-            >
-              <div className="patient-card-header">
-                <span className="patient-card-kind">{KIND_LABEL[card.kind]}</span>
-                {severity && (
-                  <span
-                    className={`patient-severity severity-${card.severityLabel}`}
-                    aria-label={severity.full}
-                  >
-                    <span className="severity-icon" aria-hidden="true">
-                      !
-                    </span>
-                    <span className="severity-text">{severity.short}</span>
-                  </span>
-                )}
-              </div>
-              <h3 className="patient-card-title">{card.title}</h3>
-              <p className="patient-card-body">{card.body}</p>
-              <footer className="patient-card-footer">
-                <ProvenanceTag provenance={card.provenance} ruleId={card.ruleId} />
-                {supported && (
-                  <button
-                    type="button"
-                    className="tts-read-btn"
-                    onClick={() => speakCard(card)}
-                    aria-pressed={isReading}
-                    aria-label={`Read this card: ${card.title}`}
-                  >
-                    {isReading ? "Reading…" : "Read this"}
-                  </button>
-                )}
-              </footer>
-            </article>
+            <li key={card.id}>
+              <PatientCard
+                kind={card.kind}
+                title={card.title}
+                body={card.body}
+                severityLabel={severityLevel(card.severityLabel)}
+                provenance={card.provenance}
+                ruleId={card.ruleId}
+                reading={isReading}
+                aria-busy={isReading}
+                action={
+                  supported ? (
+                    <button
+                      type="button"
+                      className="tts-read-btn"
+                      onClick={() => speakCard(card)}
+                      aria-pressed={isReading}
+                      aria-label={`Read this card: ${card.title}`}
+                    >
+                      {isReading ? "Reading…" : "Read this"}
+                    </button>
+                  ) : undefined
+                }
+              />
+            </li>
           );
         })}
-      </div>
+      </ul>
 
       {data.schedule.length > 0 && (
         <section className="patient-schedule" aria-labelledby="schedule-heading">
