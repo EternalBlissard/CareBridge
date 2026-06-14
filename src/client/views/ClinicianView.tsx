@@ -8,6 +8,7 @@ import {
   DrugLabelExcerpt,
   useDrugLabels,
 } from "../components/DrugLabelPanel";
+import { ProvenanceTag } from "../components/ProvenanceTag";
 import type { ParseSource } from "@shared/api";
 import type { PatientStory } from "@shared/types";
 
@@ -23,13 +24,25 @@ const URGENCY_CHIP_CLASS: Record<string, string> = {
   soon: "rf-chip-soon",
 };
 
+const URGENCY_LABEL: Record<string, string> = {
+  immediate: "Immediate",
+  urgent: "Urgent",
+  soon: "Soon",
+};
+
 const PRIORITY_LABEL: Record<string, string> = {
   high: "High priority",
   medium: "Medium priority",
   low: "Low priority",
 };
 
-export default function ClinicianView({ story, source, warning }: ClinicianViewProps) {
+const SEVERITY_LABEL: Record<string, string> = {
+  major: "Major",
+  moderate: "Moderate",
+  minor: "Minor",
+};
+
+export default function ClinicianView({ story, source }: ClinicianViewProps) {
   const brief = buildClinicianBrief(story);
   const drugNames = story.medications.map((m) => m.normalizedName);
   const fda = useDrugLabels(drugNames);
@@ -43,7 +56,6 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
         </p>
         <p className="meta">
           Parse source: <strong>{source}</strong>
-          {warning && <span className="warning"> — {warning}</span>}
         </p>
       </header>
 
@@ -56,10 +68,13 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
               title={`${flag.message} (rule ${flag.ruleId})`}
             >
               <span className="rf-chip-icon" aria-hidden="true">
-                ⚠
+                !
               </span>
-              <span className="rf-chip-urgency">{flag.urgency}</span>
+              <span className="rf-chip-urgency">
+                {URGENCY_LABEL[flag.urgency] ?? flag.urgency}
+              </span>
               <span className="rf-chip-text">{flag.message}</span>
+              <ProvenanceTag provenance="deterministic-rule" ruleId={flag.ruleId} compact />
             </span>
           ))}
         </div>
@@ -67,13 +82,15 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
 
       <article className="panel clinician-summary">
         <h3>Clinical summary</h3>
-        <p className="panel-note">Deterministic synthesis — not AI-generated</p>
+        <p className="panel-note">
+          <ProvenanceTag provenance="deterministic-rule" ruleId="clinician-brief" compact />
+        </p>
         <p className="summary-text">{brief.summary}</p>
       </article>
 
       <div className="panel clinician-timeline">
         <h3>Timeline ({story.timeline.length})</h3>
-        <p className="panel-note">Color-coded by event type</p>
+        <p className="panel-note">Events labeled by type — color is supplementary</p>
         <ol className="timeline-track" aria-label="Patient timeline">
           {story.timeline.map((evt, index) => {
             const style = timelineTypeStyle(evt.type);
@@ -86,12 +103,16 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                   borderLeftColor: style.border,
                 }}
               >
-                <div className="timeline-marker" style={{ backgroundColor: style.border }} />
+                <div
+                  className="timeline-marker"
+                  style={{ backgroundColor: style.border }}
+                  aria-hidden="true"
+                />
                 <div className="timeline-body">
                   <div className="timeline-meta">
                     <span
                       className="timeline-type-chip"
-                      style={{ backgroundColor: style.border, color: "#1f2937" }}
+                      style={{ backgroundColor: style.border, color: "#0f172a" }}
                     >
                       {style.label}
                     </span>
@@ -99,6 +120,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                     {evt.timeRef && <span className="muted">{evt.timeRef}</span>}
                   </div>
                   <p className="timeline-label">{evt.label}</p>
+                  <ProvenanceTag provenance={evt.provenance} compact />
                   {evt.severityHint && (
                     <p className="timeline-hint muted">Intensity: {evt.severityHint}</p>
                   )}
@@ -123,7 +145,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                 </span>
                 <p className="follow-up-question">{q.question}</p>
                 <p className="follow-up-rationale muted">{q.rationale}</p>
-                <span className="flag-meta">rule {q.ruleId}</span>
+                <ProvenanceTag provenance={q.provenance} ruleId={q.ruleId} compact />
               </li>
             ))}
           </ol>
@@ -150,19 +172,30 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                   <strong>{med.name}</strong>
                   {med.dose && <span className="muted"> — {med.dose}</span>}
                   {med.frequency && <span className="muted"> ({med.frequency})</span>}
+                  <ProvenanceTag provenance={med.provenance} compact />
                 </div>
                 {hits.length > 0 && (
-                  <div className="interaction-chips">
-                    {hits.map((ix) => (
-                      <span
-                        key={ix.ruleId}
-                        className={`ix-chip severity-${ix.severity}`}
-                        title={`${ix.mechanism}${ix.management ? ` — ${ix.management}` : ""}`}
-                        role={ix.severity === "major" ? "alert" : "note"}
-                      >
-                        ⚠ {ix.severity}: {otherDrugInInteraction(med, ix)}
-                      </span>
-                    ))}
+                  <div className="interaction-chips" role="list" aria-label="Drug interactions">
+                    {hits.map((ix) => {
+                      const severityText = SEVERITY_LABEL[ix.severity] ?? ix.severity;
+                      const partner = otherDrugInInteraction(med, ix);
+                      return (
+                        <span
+                          key={ix.ruleId}
+                          className={`ix-chip severity-${ix.severity}`}
+                          role={ix.severity === "major" ? "alert" : "listitem"}
+                          title={`${ix.mechanism}${ix.management ? ` — ${ix.management}` : ""}`}
+                        >
+                          <span className="ix-chip-icon" aria-hidden="true">
+                            !
+                          </span>
+                          <span className="ix-chip-label">
+                            {severityText} interaction with {partner}
+                          </span>
+                          <ProvenanceTag provenance={ix.provenance} ruleId={ix.ruleId} compact />
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
                 <DrugLabelExcerpt label={label} loading={fda.loading} />
@@ -182,12 +215,14 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                 {story.symptoms.map((s) => (
                   <li key={s.normalizedTerm}>
                     {s.isRedFlag && (
-                      <span className="chip chip-danger" aria-label="Red flag symptom">
-                        ⚠ red flag
+                      <span className="chip chip-danger">
+                        <span aria-hidden="true">! </span>
+                        Red flag
                       </span>
                     )}
                     {s.term}
                     {s.onset && <span className="muted"> · onset {s.onset}</span>}
+                    <ProvenanceTag provenance={s.provenance} compact />
                   </li>
                 ))}
               </ul>
@@ -198,8 +233,15 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
               <h4>Drug interactions ({story.interactions.length})</h4>
               <ul className="flag-list">
                 {story.interactions.map((ix) => (
-                  <li key={ix.ruleId} className={`flag-item severity-row-${ix.severity}`}>
-                    <span className={`ix-chip severity-${ix.severity}`}>{ix.severity}</span>
+                  <li
+                    key={ix.ruleId}
+                    className={`flag-item severity-row-${ix.severity}`}
+                    role={ix.severity === "major" ? "alert" : undefined}
+                  >
+                    <span className={`ix-chip severity-${ix.severity}`}>
+                      <span aria-hidden="true">! </span>
+                      {SEVERITY_LABEL[ix.severity] ?? ix.severity}
+                    </span>
                     <span className="flag-message">
                       {ix.drugA} + {ix.drugB}
                     </span>
@@ -207,6 +249,7 @@ export default function ClinicianView({ story, source, warning }: ClinicianViewP
                     {ix.management && (
                       <span className="flag-meta">Management: {ix.management}</span>
                     )}
+                    <ProvenanceTag provenance={ix.provenance} ruleId={ix.ruleId} compact />
                   </li>
                 ))}
               </ul>

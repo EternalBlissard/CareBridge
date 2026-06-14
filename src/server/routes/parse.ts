@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { PARSE_DEGRADED_MSG } from "../errors.js";
 import { ParseRequestSchema } from "../parse/schemas.js";
 import { parseNarrative } from "../parse/service.js";
 
@@ -20,7 +21,7 @@ parseRouter.post("/", async (req, res) => {
   } catch {
     res.status(500).json({
       error: "Parse failed",
-      warning: "AI explanation unavailable, showing structured data only.",
+      warning: PARSE_DEGRADED_MSG,
     });
   }
 });

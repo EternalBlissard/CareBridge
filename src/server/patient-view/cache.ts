@@ -46,3 +46,8 @@ export function setCachedPatientRewrite(key: string, value: LlmPatientRewrite): 
     // Disk persistence is best-effort.
   }
 }
+
+export function hasCachedPatientRewrite(key: string): boolean {
+  if (memory.has(key)) return true;
+  return existsSync(join(CACHE_DIR, `${key}.json`));
+}

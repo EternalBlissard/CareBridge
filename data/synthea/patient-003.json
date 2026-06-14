@@ -1,0 +1,13 @@
+{
+  "id": "synthea-patient-003",
+  "source": "sample",
+  "createdAt": "2026-06-12T00:00:00.000Z",
+  "displayName": "Elena Vasquez, 34F",
+  "conditions": [
+    "Major depressive disorder",
+    "Generalized anxiety disorder",
+    "Migraine"
+  ],
+  "attribution": "Hand-authored synthetic narrative modeled on MITRE Synthea output. Not real patient data.",
+  "rawText": "Elena Vasquez is a 34-year-old woman presenting for a telehealth check-in. She reports worsening low mood, poor sleep, and decreased appetite over the past two weeks. She says she has been having thoughts of self-harm and at times feels like she wants to die, though she denies a specific plan. She lives with her sister who is supportive.\n\nPast psychiatric history includes major depressive disorder and generalized anxiety disorder. No prior suicide attempts. She denies alcohol or substance use.\n\nCurrent medications:\n- Sertraline 100 mg once daily\n- Sumatriptan 50 mg as needed for migraine\n- Ibuprofen 200 mg as needed for headache (uses occasionally)\n\nShe denies chest pain, shortness of breath, or abdominal pain. No fever. She agrees to a safety plan discussion and follow-up within 48 hours."
+}

@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import DegradedBanner from "../components/DegradedBanner";
+import { ProvenanceTag } from "../components/ProvenanceTag";
+import { useSpeechNarration } from "../hooks/useSpeechNarration";
+import { friendlyFetchError } from "../utils/errors";
 import type { PatientViewResponse } from "@shared/api";
 import type { PatientCard, PatientStory } from "@shared/types";
 
@@ -15,18 +19,30 @@ const KIND_LABEL: Record<PatientCard["kind"], string> = {
   visit: "Visit",
 };
 
-const SEVERITY_ICON: Record<string, string> = {
-  immediate: "🚨",
-  urgent: "⚠️",
-  major: "⚠️",
-  moderate: "⚡",
-  minor: "ℹ️",
+const SEVERITY_DISPLAY: Record<string, { short: string; full: string }> = {
+  immediate: { short: "Immediate", full: "Immediate attention needed" },
+  urgent: { short: "Urgent", full: "Urgent — contact care team" },
+  major: { short: "Major", full: "Major interaction warning" },
+  moderate: { short: "Moderate", full: "Moderate concern" },
+  minor: { short: "Minor", full: "Minor note" },
+  soon: { short: "Soon", full: "Follow up soon" },
 };
+
+function isMajorAlert(card: PatientCard): boolean {
+  if (card.kind === "safety") return true;
+  if (card.kind === "interaction") {
+    return card.severityLabel === "major" || card.severityLabel === "immediate";
+  }
+  return false;
+}
 
 export default function PatientView({ story }: PatientViewProps) {
   const [data, setData] = useState<PatientViewResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const narration = useSpeechNarration();
+  const { supported, state, activeId, speakCard, speakAll, pause, resume, stop, isSpeaking, isPaused, isActive } =
+    narration;
 
   useEffect(() => {
     let cancelled = false;
@@ -38,9 +54,15 @@ export default function PatientView({ story }: PatientViewProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ story }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<PatientViewResponse>;
+      .then(async (res) => {
+        const view = (await res.json()) as PatientViewResponse & {
+          error?: string;
+          warning?: string;
+        };
+        if (!res.ok) {
+          throw new Error(friendlyFetchError(res.status, view));
+        }
+        return view;
       })
       .then((view) => {
         if (!cancelled) setData(view);
@@ -59,9 +81,11 @@ export default function PatientView({ story }: PatientViewProps) {
     };
   }, [story]);
 
+  useEffect(() => () => stop(), [stop]);
+
   if (loading) {
     return (
-      <section className="patient-view" aria-live="polite">
+      <section className="patient-view" aria-live="polite" aria-busy="true">
         <p className="patient-loading">Preparing your plain-language summary…</p>
       </section>
     );
@@ -75,6 +99,13 @@ export default function PatientView({ story }: PatientViewProps) {
     );
   }
 
+  const narrationStatus =
+    state === "speaking"
+      ? "Narration in progress"
+      : state === "paused"
+        ? "Narration paused"
+        : "";
+
   return (
     <section className="patient-view" aria-labelledby="patient-heading">
       <header className="patient-header">
@@ -84,37 +115,97 @@ export default function PatientView({ story }: PatientViewProps) {
         </p>
         <p className="meta patient-meta">
           Rewrite source: <strong>{data.source}</strong>
-          {data.warning && <span className="warning"> — {data.warning}</span>}
         </p>
+
+        {data.warning && <DegradedBanner message={data.warning} />}
+
+        {supported && (
+          <div className="tts-toolbar" role="group" aria-label="Text-to-speech controls">
+            <button
+              type="button"
+              className="tts-btn tts-btn-primary"
+              onClick={() => speakAll(data.cards, data.schedule)}
+              disabled={isActive && activeId === "__all__"}
+              aria-describedby="tts-hint"
+            >
+              Narrate everything
+            </button>
+            {isSpeaking && (
+              <button type="button" className="tts-btn" onClick={pause}>
+                Pause
+              </button>
+            )}
+            {isPaused && (
+              <button type="button" className="tts-btn" onClick={resume}>
+                Resume
+              </button>
+            )}
+            {isActive && (
+              <button type="button" className="tts-btn" onClick={stop}>
+                Stop
+              </button>
+            )}
+            <p id="tts-hint" className="tts-hint">
+              Uses your device voice — works offline. Long text is split for browser limits.
+            </p>
+          </div>
+        )}
+
+        {!supported && (
+          <p className="tts-unsupported" role="status">
+            Text-to-speech is not available in this browser.
+          </p>
+        )}
+
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {narrationStatus}
+        </div>
       </header>
 
-      <div className="patient-cards" aria-label="Health summary cards">
+      <div className="patient-cards" role="list" aria-label="Health summary cards">
         {data.cards.map((card) => {
-          const isAlert = card.kind === "safety" || card.kind === "interaction";
-          const icon = card.severityLabel ? SEVERITY_ICON[card.severityLabel] : null;
+          const severity = card.severityLabel
+            ? SEVERITY_DISPLAY[card.severityLabel]
+            : undefined;
+          const majorAlert = isMajorAlert(card);
+          const isReading = activeId === card.id && isActive;
 
           return (
             <article
               key={card.id}
-              className={`patient-card patient-card-${card.kind}`}
-              role={isAlert ? "alert" : undefined}
+              className={`patient-card patient-card-${card.kind}${isReading ? " patient-card-reading" : ""}`}
+              role={majorAlert ? "alert" : "listitem"}
+              aria-busy={isReading}
             >
               <div className="patient-card-header">
                 <span className="patient-card-kind">{KIND_LABEL[card.kind]}</span>
-                {card.severityLabel && (
-                  <span className={`patient-severity severity-${card.severityLabel}`}>
-                    {icon && <span aria-hidden="true">{icon} </span>}
-                    {card.severityLabel}
+                {severity && (
+                  <span
+                    className={`patient-severity severity-${card.severityLabel}`}
+                    aria-label={severity.full}
+                  >
+                    <span className="severity-icon" aria-hidden="true">
+                      !
+                    </span>
+                    <span className="severity-text">{severity.short}</span>
                   </span>
                 )}
               </div>
               <h3 className="patient-card-title">{card.title}</h3>
               <p className="patient-card-body">{card.body}</p>
               <footer className="patient-card-footer">
-                <span className="provenance-tag">
-                  {card.provenance === "ai-generated" ? "AI-generated" : "Rule-based"}
-                </span>
-                {card.ruleId && <span className="flag-meta">rule {card.ruleId}</span>}
+                <ProvenanceTag provenance={card.provenance} ruleId={card.ruleId} />
+                {supported && (
+                  <button
+                    type="button"
+                    className="tts-read-btn"
+                    onClick={() => speakCard(card)}
+                    aria-pressed={isReading}
+                    aria-label={`Read this card: ${card.title}`}
+                  >
+                    {isReading ? "Reading…" : "Read this"}
+                  </button>
+                )}
               </footer>
             </article>
           );
@@ -125,9 +216,9 @@ export default function PatientView({ story }: PatientViewProps) {
         <section className="patient-schedule" aria-labelledby="schedule-heading">
           <h3 id="schedule-heading">Your schedule</h3>
           <p className="panel-note">Built from medication timing in your story (deterministic)</p>
-          <div className="schedule-grid">
+          <div className="schedule-grid" role="list" aria-label="Daily medication schedule">
             {data.schedule.map((slot) => (
-              <div key={slot.id} className="schedule-slot">
+              <div key={slot.id} className="schedule-slot" role="listitem">
                 <h4 className="schedule-time">{slot.timeLabel}</h4>
                 <ul className="schedule-items">
                   {slot.items.map((item, i) => (
