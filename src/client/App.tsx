@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ClinicianView from "./views/ClinicianView";
 import PatientView from "./views/PatientView";
+import Landing from "./views/Landing";
 import DegradedBanner from "./components/DegradedBanner";
 import SafetyBanner from "./components/SafetyBanner";
 import { useLargeText } from "./hooks/useLargeText";
@@ -14,8 +15,10 @@ type HealthResponse = {
 };
 
 type ViewMode = "clinician" | "patient";
+type Screen = "landing" | "app";
 
 export default function App() {
+  const [screen, setScreen] = useState<Screen>("landing");
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [sample, setSample] = useState<PatientNarrative | null>(null);
@@ -29,6 +32,7 @@ export default function App() {
   const { largeText, toggle: toggleLargeText } = useLargeText();
   const clinicianTabRef = useRef<HTMLButtonElement>(null);
   const patientTabRef = useRef<HTMLButtonElement>(null);
+  const appHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     fetch("/api/health")
@@ -64,6 +68,13 @@ export default function App() {
         setHealthError((prev) => prev ?? "Could not load Synthea sample patient");
       });
   }, []);
+
+  // Route-like focus management: when the user launches the app from the
+  // landing screen, move focus to the app heading so screen-reader and
+  // keyboard users land in the new context instead of being stranded.
+  useEffect(() => {
+    if (screen === "app") appHeadingRef.current?.focus();
+  }, [screen]);
 
   function loadSample() {
     if (sample) setText(sample.rawText);
@@ -124,6 +135,14 @@ export default function App() {
     (next === "clinician" ? clinicianTabRef : patientTabRef).current?.focus();
   }
 
+  if (screen === "landing") {
+    return (
+      <div className="app app-landing">
+        <Landing onLaunch={() => setScreen("app")} />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <a href="#main-content" className="skip-link">
@@ -131,7 +150,18 @@ export default function App() {
       </a>
 
       <header role="banner" className="site-header">
-        <h1>CareBridge</h1>
+        <div className="site-header-row">
+          <h1 ref={appHeadingRef} tabIndex={-1}>
+            CareBridge
+          </h1>
+          <button
+            type="button"
+            className="link-btn home-link"
+            onClick={() => setScreen("landing")}
+          >
+            ← Home
+          </button>
+        </div>
         <p className="tagline">Text in → structured timeline + med list</p>
       </header>
 
@@ -210,6 +240,14 @@ export default function App() {
         <div className="sr-only" aria-live="polite" aria-atomic="true">
           {timelineAnnouncement}
         </div>
+
+        {loading && (
+          <div className="skeleton-stack" aria-hidden="true">
+            <div className="skeleton-block skeleton-sm" />
+            <div className="skeleton-block skeleton-tall" />
+            <div className="skeleton-block skeleton-md" />
+          </div>
+        )}
 
         {result && (
           <section className="results" aria-labelledby="results-heading">
