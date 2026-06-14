@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import ClinicianView from "./views/ClinicianView";
 import PatientView from "./views/PatientView";
+import Landing from "./views/Landing";
 import DegradedBanner from "./components/DegradedBanner";
 import SafetyBanner from "./components/SafetyBanner";
+import { Button } from "./design-system/components/Button";
+import { TextArea } from "./design-system/components/TextArea";
+import { Select } from "./design-system/components/Select";
+import { ToggleButton } from "./design-system/components/ToggleButton";
+import { ViewTabs } from "./design-system/components/ViewTabs";
 import { useLargeText } from "./hooks/useLargeText";
 import { friendlyFetchError } from "./utils/errors";
 import type { ParseResponse } from "@shared/api";
@@ -14,8 +20,10 @@ type HealthResponse = {
 };
 
 type ViewMode = "clinician" | "patient";
+type Screen = "landing" | "app";
 
 export default function App() {
+  const [screen, setScreen] = useState<Screen>("landing");
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [sample, setSample] = useState<PatientNarrative | null>(null);
@@ -27,8 +35,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("clinician");
   const [timelineAnnouncement, setTimelineAnnouncement] = useState("");
   const { largeText, toggle: toggleLargeText } = useLargeText();
-  const clinicianTabRef = useRef<HTMLButtonElement>(null);
-  const patientTabRef = useRef<HTMLButtonElement>(null);
+  const appHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     fetch("/api/health")
@@ -64,6 +71,13 @@ export default function App() {
         setHealthError((prev) => prev ?? "Could not load Synthea sample patient");
       });
   }, []);
+
+  // Route-like focus management: when the user launches the app from the
+  // landing screen, move focus to the app heading so screen-reader and
+  // keyboard users land in the new context instead of being stranded.
+  useEffect(() => {
+    if (screen === "app") appHeadingRef.current?.focus();
+  }, [screen]);
 
   function loadSample() {
     if (sample) setText(sample.rawText);
@@ -116,12 +130,12 @@ export default function App() {
     }
   }
 
-  function handleViewTabKeyDown(e: React.KeyboardEvent) {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    e.preventDefault();
-    const next: ViewMode = viewMode === "clinician" ? "patient" : "clinician";
-    setViewMode(next);
-    (next === "clinician" ? clinicianTabRef : patientTabRef).current?.focus();
+  if (screen === "landing") {
+    return (
+      <div className="app app-landing">
+        <Landing onLaunch={() => setScreen("app")} />
+      </div>
+    );
   }
 
   return (
@@ -131,21 +145,27 @@ export default function App() {
       </a>
 
       <header role="banner" className="site-header">
-        <h1>CareBridge</h1>
+        <div className="site-header-row">
+          <h1 ref={appHeadingRef} tabIndex={-1}>
+            CareBridge
+          </h1>
+          <button
+            type="button"
+            className="link-btn home-link"
+            onClick={() => setScreen("landing")}
+          >
+            ← Home
+          </button>
+        </div>
         <p className="tagline">Text in → structured timeline + med list</p>
       </header>
 
       <SafetyBanner sample={sample} />
 
       <nav className="a11y-toolbar" aria-label="Accessibility options">
-        <button
-          type="button"
-          className="a11y-toggle"
-          aria-pressed={largeText}
-          onClick={toggleLargeText}
-        >
+        <ToggleButton pressed={largeText} onClick={toggleLargeText}>
           {largeText ? "Standard text size" : "Larger text"}
-        </button>
+        </ToggleButton>
       </nav>
 
       <main id="main-content" tabIndex={-1}>
@@ -163,20 +183,20 @@ export default function App() {
             </label>
             <div className="parse-header-actions">
               {samples.length > 1 && (
-                <label className="sample-picker">
-                  <span className="sr-only">Demo patient</span>
-                  <select
-                    value={sample?.id ?? ""}
-                    onChange={(e) => void loadSampleById(e.target.value)}
-                    aria-label="Choose demo patient"
-                  >
-                    {samples.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.displayName ?? p.id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <Select
+                  id="sample-picker"
+                  label="Demo patient"
+                  hideLabel
+                  value={sample?.id ?? ""}
+                  onChange={(e) => void loadSampleById(e.target.value)}
+                  aria-label="Choose demo patient"
+                >
+                  {samples.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.displayName ?? p.id}
+                    </option>
+                  ))}
+                </Select>
               )}
               {sample && (
                 <button type="button" className="link-btn" onClick={loadSample}>
@@ -185,20 +205,21 @@ export default function App() {
               )}
             </div>
           </div>
-          <textarea
+          <TextArea
             id="narrative"
             rows={10}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={sample ? undefined : "Loading sample patient…"}
-            aria-describedby="narrative-hint"
+            hint="For demo only — use the synthetic sample. Do not enter real patient information."
           />
-          <p id="narrative-hint" className="narrative-safety-hint">
-            For demo only — use the synthetic sample. Do not enter real patient information.
-          </p>
-          <button type="button" onClick={handleParse} disabled={loading || !text.trim()}>
+          <Button
+            onClick={handleParse}
+            disabled={loading || !text.trim()}
+            style={{ marginTop: "var(--sp-3)" }}
+          >
             {loading ? "Parsing…" : "Parse narrative"}
-          </button>
+          </Button>
         </section>
 
         {parseError && (
@@ -211,6 +232,14 @@ export default function App() {
           {timelineAnnouncement}
         </div>
 
+        {loading && (
+          <div className="skeleton-stack" aria-hidden="true">
+            <div className="skeleton-block skeleton-sm" />
+            <div className="skeleton-block skeleton-tall" />
+            <div className="skeleton-block skeleton-md" />
+          </div>
+        )}
+
         {result && (
           <section className="results" aria-labelledby="results-heading">
             <h2 id="results-heading" className="sr-only">
@@ -218,47 +247,19 @@ export default function App() {
             </h2>
 
             {result.warning && <DegradedBanner message={result.warning} />}
-            <nav
-              className="view-toggle"
-              role="tablist"
-              aria-label="Result view"
-              onKeyDown={handleViewTabKeyDown}
-            >
-              <button
-                ref={clinicianTabRef}
-                type="button"
-                role="tab"
-                id="tab-clinician"
-                aria-selected={viewMode === "clinician"}
-                aria-controls="panel-clinician"
-                tabIndex={viewMode === "clinician" ? 0 : -1}
-                className={viewMode === "clinician" ? "view-tab active" : "view-tab"}
-                onClick={() => setViewMode("clinician")}
-              >
-                Clinician
-              </button>
-              <button
-                ref={patientTabRef}
-                type="button"
-                role="tab"
-                id="tab-patient"
-                aria-selected={viewMode === "patient"}
-                aria-controls="panel-patient"
-                tabIndex={viewMode === "patient" ? 0 : -1}
-                className={viewMode === "patient" ? "view-tab active" : "view-tab"}
-                onClick={() => setViewMode("patient")}
-              >
-                Patient
-              </button>
-            </nav>
+            <ViewTabs
+              ariaLabel="Result view"
+              value={viewMode}
+              onChange={(id) => setViewMode(id as ViewMode)}
+              tabs={[
+                { id: "clinician", label: "Clinician" },
+                { id: "patient", label: "Patient" },
+              ]}
+              style={{ margin: "var(--sp-4) 0" }}
+            />
 
             {viewMode === "clinician" && (
-              <div
-                role="tabpanel"
-                id="panel-clinician"
-                aria-labelledby="tab-clinician"
-                tabIndex={0}
-              >
+              <div role="tabpanel" aria-label="Clinician view" tabIndex={0}>
                 <ClinicianView
                   story={result.story}
                   source={result.source}
@@ -268,7 +269,7 @@ export default function App() {
             )}
 
             {viewMode === "patient" && (
-              <div role="tabpanel" id="panel-patient" aria-labelledby="tab-patient" tabIndex={0}>
+              <div role="tabpanel" aria-label="Patient view" tabIndex={0}>
                 <PatientView story={result.story} />
               </div>
             )}

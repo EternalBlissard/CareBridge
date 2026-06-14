@@ -2,13 +2,19 @@ import {
   interactionsForMed,
   otherDrugInInteraction,
 } from "@shared/interaction-utils";
-import { buildClinicianBrief, timelineTypeStyle } from "../../rules/clinician-brief.js";
+import { buildClinicianBrief } from "../../rules/clinician-brief.js";
 import {
   DrugLabelAttribution,
   DrugLabelExcerpt,
   useDrugLabels,
 } from "../components/DrugLabelPanel";
 import { ProvenanceTag } from "../components/ProvenanceTag";
+import { Panel } from "../design-system/components/Panel";
+import { SeverityChip } from "../design-system/components/SeverityChip";
+import {
+  TimelineEvent,
+  type TimelineEventType,
+} from "../design-system/components/TimelineEvent";
 import type { ParseSource } from "@shared/api";
 import type { PatientStory } from "@shared/types";
 
@@ -16,18 +22,6 @@ type ClinicianViewProps = {
   story: PatientStory;
   source: ParseSource;
   warning?: string;
-};
-
-const URGENCY_CHIP_CLASS: Record<string, string> = {
-  immediate: "rf-chip-immediate",
-  urgent: "rf-chip-urgent",
-  soon: "rf-chip-soon",
-};
-
-const URGENCY_LABEL: Record<string, string> = {
-  immediate: "Immediate",
-  urgent: "Urgent",
-  soon: "Soon",
 };
 
 const PRIORITY_LABEL: Record<string, string> = {
@@ -41,6 +35,21 @@ const SEVERITY_LABEL: Record<string, string> = {
   moderate: "Moderate",
   minor: "Minor",
 };
+
+const TIMELINE_TYPES = new Set<TimelineEventType>([
+  "symptom",
+  "medication",
+  "visit",
+  "procedure",
+  "history",
+  "other",
+]);
+
+/** Narrow the free-text event type onto the design-system timeline palette. */
+function timelineType(type: string): TimelineEventType {
+  const t = type.toLowerCase() as TimelineEventType;
+  return TIMELINE_TYPES.has(t) ? t : "other";
+}
 
 export default function ClinicianView({ story, source }: ClinicianViewProps) {
   const brief = buildClinicianBrief(story);
@@ -60,83 +69,67 @@ export default function ClinicianView({ story, source }: ClinicianViewProps) {
       </header>
 
       {story.redFlags.length > 0 && (
-        <div className="rf-chip-row" role="alert" aria-label="Red flag alerts">
+        <div
+          className="rf-chip-row"
+          role="alert"
+          aria-label="Red flag alerts"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "var(--sp-2)",
+            alignItems: "center",
+            margin: "var(--sp-4) 0",
+          }}
+        >
           {story.redFlags.map((flag) => (
-            <span
-              key={flag.id}
-              className={`rf-chip ${URGENCY_CHIP_CLASS[flag.urgency] ?? ""}`}
-              title={`${flag.message} (rule ${flag.ruleId})`}
-            >
-              <span className="rf-chip-icon" aria-hidden="true">
-                !
-              </span>
-              <span className="rf-chip-urgency">
-                {URGENCY_LABEL[flag.urgency] ?? flag.urgency}
-              </span>
-              <span className="rf-chip-text">{flag.message}</span>
+            <SeverityChip key={flag.id} level={flag.urgency} pill>
+              {flag.message}
               <ProvenanceTag provenance="deterministic-rule" ruleId={flag.ruleId} compact />
-            </span>
+            </SeverityChip>
           ))}
         </div>
       )}
 
-      <article className="panel clinician-summary">
-        <h3>Clinical summary</h3>
-        <p className="panel-note">
-          <ProvenanceTag provenance="deterministic-rule" ruleId="clinician-brief" compact />
-        </p>
+      <Panel
+        title="Clinical summary"
+        note={<ProvenanceTag provenance="deterministic-rule" ruleId="clinician-brief" compact />}
+        style={{ marginTop: "var(--sp-4)" }}
+      >
         <p className="summary-text">{brief.summary}</p>
-      </article>
+      </Panel>
 
-      <div className="panel clinician-timeline">
-        <h3>Timeline ({story.timeline.length})</h3>
-        <p className="panel-note">Events labeled by type — color is supplementary</p>
-        <ol className="timeline-track" aria-label="Patient timeline">
-          {story.timeline.map((evt, index) => {
-            const style = timelineTypeStyle(evt.type);
-            return (
-              <li
-                key={evt.id}
-                className="timeline-item"
-                style={{
-                  backgroundColor: style.bg,
-                  borderLeftColor: style.border,
-                }}
-              >
-                <div
-                  className="timeline-marker"
-                  style={{ backgroundColor: style.border }}
-                  aria-hidden="true"
-                />
-                <div className="timeline-body">
-                  <div className="timeline-meta">
-                    <span
-                      className="timeline-type-chip"
-                      style={{ backgroundColor: style.border, color: "#0f172a" }}
-                    >
-                      {style.label}
-                    </span>
-                    <span className="timeline-index">#{index + 1}</span>
-                    {evt.timeRef && <span className="muted">{evt.timeRef}</span>}
-                  </div>
-                  <p className="timeline-label">{evt.label}</p>
-                  <ProvenanceTag provenance={evt.provenance} compact />
-                  {evt.severityHint && (
-                    <p className="timeline-hint muted">Intensity: {evt.severityHint}</p>
-                  )}
-                </div>
-              </li>
-            );
-          })}
+      <Panel
+        title="Timeline"
+        count={story.timeline.length}
+        note="Events labeled by type — color is supplementary"
+        style={{ marginTop: "var(--sp-4)" }}
+      >
+        <ol
+          className="timeline-track"
+          aria-label="Patient timeline"
+          style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "var(--sp-2)" }}
+        >
+          {story.timeline.map((evt, index) => (
+            <TimelineEvent
+              key={evt.id}
+              type={timelineType(evt.type)}
+              label={evt.label}
+              index={index + 1}
+              timeRef={evt.timeRef}
+              severityHint={evt.severityHint}
+              provenance={evt.provenance}
+            />
+          ))}
         </ol>
-      </div>
+      </Panel>
 
       {brief.followUpQuestions.length > 0 && (
-        <div className="panel follow-up-panel">
-          <h3>Suggested follow-up questions ({brief.followUpQuestions.length})</h3>
-          <p className="panel-note">
-            Rule-based prompts for history-taking — not diagnoses or treatment orders
-          </p>
+        <Panel
+          title="Suggested follow-up questions"
+          count={brief.followUpQuestions.length}
+          note="Rule-based prompts for history-taking — not diagnoses or treatment orders"
+          style={{ marginTop: "var(--sp-4)" }}
+        >
           <ol className="follow-up-list">
             {brief.followUpQuestions.map((q) => (
               <li key={q.id} className={`follow-up-item priority-${q.priority}`}>
@@ -149,14 +142,15 @@ export default function ClinicianView({ story, source }: ClinicianViewProps) {
               </li>
             ))}
           </ol>
-        </div>
+        </Panel>
       )}
 
-      <div className="panel clinician-meds">
-        <h3>Medications ({story.medications.length})</h3>
-        <p className="panel-note">
-          DDInter severity (deterministic) + openFDA label interaction text (live, 24h cache)
-        </p>
+      <Panel
+        title="Medications"
+        count={story.medications.length}
+        note="DDInter severity (deterministic) + openFDA label interaction text (live, 24h cache)"
+        style={{ marginTop: "var(--sp-4)" }}
+      >
         <DrugLabelAttribution
           attribution={fda.attribution}
           warning={fda.warning}
@@ -175,24 +169,27 @@ export default function ClinicianView({ story, source }: ClinicianViewProps) {
                   <ProvenanceTag provenance={med.provenance} compact />
                 </div>
                 {hits.length > 0 && (
-                  <div className="interaction-chips" role="list" aria-label="Drug interactions">
+                  <div
+                    className="interaction-chips"
+                    aria-label="Drug interactions"
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "var(--sp-2)",
+                      marginTop: "var(--sp-2)",
+                    }}
+                  >
                     {hits.map((ix) => {
-                      const severityText = SEVERITY_LABEL[ix.severity] ?? ix.severity;
                       const partner = otherDrugInInteraction(med, ix);
                       return (
                         <span
                           key={ix.ruleId}
-                          className={`ix-chip severity-${ix.severity}`}
-                          role={ix.severity === "major" ? "alert" : "listitem"}
                           title={`${ix.mechanism}${ix.management ? ` — ${ix.management}` : ""}`}
                         >
-                          <span className="ix-chip-icon" aria-hidden="true">
-                            !
-                          </span>
-                          <span className="ix-chip-label">
-                            {severityText} interaction with {partner}
-                          </span>
-                          <ProvenanceTag provenance={ix.provenance} ruleId={ix.ruleId} compact />
+                          <SeverityChip level={ix.severity}>
+                            interaction with {partner}
+                            <ProvenanceTag provenance={ix.provenance} ruleId={ix.ruleId} compact />
+                          </SeverityChip>
                         </span>
                       );
                     })}
@@ -203,10 +200,10 @@ export default function ClinicianView({ story, source }: ClinicianViewProps) {
             );
           })}
         </ul>
-      </div>
+      </Panel>
 
       {(story.interactions.length > 0 || story.symptoms.length > 0) && (
-        <details className="panel clinician-details">
+        <details className="panel clinician-details" style={{ marginTop: "var(--sp-4)" }}>
           <summary>Symptoms &amp; interactions detail</summary>
           {story.symptoms.length > 0 && (
             <div className="detail-block">
@@ -236,7 +233,6 @@ export default function ClinicianView({ story, source }: ClinicianViewProps) {
                   <li
                     key={ix.ruleId}
                     className={`flag-item severity-row-${ix.severity}`}
-                    role={ix.severity === "major" ? "alert" : undefined}
                   >
                     <span className={`ix-chip severity-${ix.severity}`}>
                       <span aria-hidden="true">! </span>

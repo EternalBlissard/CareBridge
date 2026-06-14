@@ -1,0 +1,105 @@
+/* ============================================================
+   CareBridge — Color tokens
+   Encodes the exact hand-picked palette from the product
+   (src/client/index.css). All foreground/background pairings
+   are designed to clear WCAG AA, most AAA — accessibility is a
+   first-class brand value, not an afterthought.
+   ============================================================ */
+
+:root {
+  /* ---- Brand (trust blue) ------------------------------- */
+  --cb-brand: #1e40af;          /* primary actions, links */
+  --cb-brand-dark: #1e3a8a;     /* hover / pressed, active tabs */
+  --cb-brand-tint: #e0e7ff;     /* tinted fills, chips */
+  --cb-brand-wash: #eff6ff;     /* faint info surface */
+
+  /* ---- Ink ramp (slate) --------------------------------- */
+  --cb-ink: #0f172a;            /* primary text */
+  --cb-ink-soft: #334155;       /* secondary text */
+  --cb-ink-muted: #64748b;      /* tertiary / meta text */
+
+  /* ---- Lines & surfaces --------------------------------- */
+  --cb-line: #e2e8f0;           /* hairline borders */
+  --cb-line-strong: #cbd5e1;    /* stronger dividers, inputs */
+  --cb-surface: #ffffff;        /* cards, panels */
+  --cb-bg: #f8f9fc;             /* app canvas */
+  --cb-bg-subtle: #f8fafc;      /* nested fills */
+
+  /* ---- Focus ------------------------------------------- */
+  --cb-focus-ring: #1d4ed8;
+  --cb-focus-offset: 3px;
+
+  /* ============================================================
+     Provenance — the brand's signature trust mechanism.
+     Every value in the UI is tagged by where it came from.
+     ============================================================ */
+  /* AI-generated (indigo) */
+  --cb-ai-fg: #312e81;
+  --cb-ai-border: #6366f1;
+  --cb-ai-bg: #e0e7ff;
+  /* Deterministic rule (green = safety, never the model) */
+  --cb-rule-fg: #065f46;
+  --cb-rule-border: #10b981;
+  --cb-rule-bg: #ecfdf5;
+
+  /* ============================================================
+     Urgency / severity — a single warm ramp, darkest = most urgent.
+     Used for red flags (immediate/urgent/soon) and drug-interaction
+     severity (major/moderate/minor).
+     ============================================================ */
+  /* Immediate / Major — red */
+  --cb-sev-1-fg: #991b1b;
+  --cb-sev-1-border: #fca5a5;
+  --cb-sev-1-bg: #fee2e2;
+  --cb-sev-1-strong: #7f1d1d;
+  /* Urgent / Moderate — orange */
+  --cb-sev-2-fg: #c2410c;
+  --cb-sev-2-border: #fdba74;
+  --cb-sev-2-bg: #ffedd5;
+  --cb-sev-2-strong: #9a3412;
+  /* Soon / Minor — amber (darkened for ≥7:1 on the amber chip bg) */
+  --cb-sev-3-fg: #713f12;
+  --cb-sev-3-border: #fde047;
+  --cb-sev-3-bg: #fef9c3;
+  --cb-sev-3-strong: #713f12;
+
+  /* ---- Safety banner (caution amber) -------------------- */
+  --cb-caution-fg: #78350f;
+  --cb-caution-border: #d97706;
+  --cb-caution-bg: #fef3c7;
+
+  /* ---- Degraded / fallback (warm orange) ---------------- */
+  --cb-degraded-fg: #7c2d12;
+  --cb-degraded-border: #fb923c;
+  --cb-degraded-bg: #fff7ed;
+  --cb-degraded-icon: #ea580c;
+
+  /* ---- Positive status ---------------------------------- */
+  --cb-ok-fg: #166534;
+  --cb-error-fg: #b91c1c;
+
+  /* ============================================================
+     Timeline event types — color is supplementary to the text
+     label (never the sole signal). bg + left border per type.
+     ============================================================ */
+  --cb-evt-symptom-bg: #fef2f2;     --cb-evt-symptom-border: #fca5a5;
+  --cb-evt-medication-bg: #eff6ff;  --cb-evt-medication-border: #93c5fd;
+  --cb-evt-visit-bg: #ecfdf5;       --cb-evt-visit-border: #6ee7b7;
+  --cb-evt-procedure-bg: #f5f3ff;   --cb-evt-procedure-border: #c4b5fd;
+  --cb-evt-history-bg: #f8fafc;     --cb-evt-history-border: #cbd5e1;
+  --cb-evt-other-bg: #f9fafb;       --cb-evt-other-border: #d1d5db;
+
+  /* ============================================================
+     Semantic aliases — prefer these in components.
+     ============================================================ */
+  --text-strong: var(--cb-ink);
+  --text-body: var(--cb-ink-soft);
+  --text-muted: var(--cb-ink-muted);
+  --surface-card: var(--cb-surface);
+  --surface-app: var(--cb-bg);
+  --border-hairline: var(--cb-line);
+  --border-input: var(--cb-line-strong);
+  --action-primary: var(--cb-brand);
+  --action-primary-hover: var(--cb-brand-dark);
+  --link: var(--cb-brand);
+}
