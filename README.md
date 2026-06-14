@@ -3,6 +3,72 @@
 Converts free-text patient narratives into a structured timeline and medication list.  
 **Frontend:** Vite + React (port 5173) · **Backend:** Express API (port 3001)
 
+## Architecture
+
+```mermaid
+flowchart TD
+  subgraph Browser["Browser — React SPA (Vite + TypeScript)"]
+    UI["Landing · Clinician view · Patient view"]
+    DS["Design system<br/>tokens + components"]
+    TTS["Web Speech API<br/>TTS narration · offline"]
+    UI --- DS
+    UI --- TTS
+  end
+
+  subgraph Server["Express API — PAT stays server-side"]
+    R["Routes<br/>/parse · /patient-view<br/>/drug-label · /synthetic-patient"]
+    AILAYER["AI layer — language only<br/>extract structure · plain-language rewrite"]
+    ZOD["Zod validate<br/>+ deterministic skeleton fallback"]
+    RULES["Deterministic rules — never the LLM<br/>red flags · DDInter severity<br/>clinician brief · schedule"]
+    CACHE["Disk cache<br/>llm-parse · llm-patient · openfda 24h"]
+    R --> AILAYER --> ZOD --> RULES
+    R --> RULES
+    AILAYER -.->|"hash key"| CACHE
+  end
+
+  subgraph Ext["External — free tier, no paid keys"]
+    GM["GitHub Models<br/>gpt-4o-mini"]
+    FDA["openFDA Drug Label<br/>CC0"]
+    DDI["DDInter 2.0<br/>bundled CSV"]
+    SYN["Synthea<br/>synthetic patients"]
+  end
+
+  subgraph Dev["GitHub Copilot — Creative Apps track"]
+    COP["Agent + Plan mode<br/>grounded by .github/copilot-instructions.md"]
+    MCP["CareBridge MCP server<br/>check_interactions · lookup_drug_label<br/>detect_red_flags · get_synthetic_patient"]
+    COP -->|"mcp.json · stdio"| MCP
+  end
+
+  UI -->|"fetch /api/*"| R
+  AILAYER -->|"Bearer PAT"| GM
+  RULES -->|"severity"| DDI
+  RULES -->|"label text · 429 backoff"| FDA
+  R -->|"sample narratives"| SYN
+  MCP -.->|"reuses"| RULES
+  MCP -.->|"reuses"| FDA
+
+  classDef ai fill:#e0e7ff,stroke:#6366f1,color:#312e81;
+  classDef rule fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef ext fill:#f8fafc,stroke:#cbd5e1,color:#0f172a;
+  classDef cop fill:#fff7ed,stroke:#fb923c,color:#7c2d12;
+  class AILAYER,GM ai;
+  class RULES,ZOD,DDI rule;
+  class FDA,SYN ext;
+  class COP,MCP cop;
+```
+
+**Legend** — 🟦 indigo = **AI / language only** (gpt-4o-mini: structure + rewrite) ·
+🟩 green = **deterministic safety** (red flags + interaction severity, **never the LLM**) ·
+🟧 orange = **GitHub Copilot + MCP** · ⬜ neutral = external data (CC0 / bundled / synthetic).
+
+**How GitHub Copilot was used (Creative Apps track):** Plan + agent mode scaffolded the
+app and were grounded on every request by `.github/copilot-instructions.md`; the
+CareBridge **MCP server** exposes the four deterministic safety tools to Copilot agent
+mode (config in `.vscode/mcp.json` / `.cursor/mcp.json`), reusing the same rule engine
+the app does — so the agent and the product share one safety core.
+
+> 📐 Static export for slides / portal upload: [`assets/architecture.png`](assets/architecture.png)
+
 ## Prerequisites
 
 - Node.js 18+
@@ -89,6 +155,26 @@ CareBridge is a **demo triage assistant**, not a clinical product.
   plain-language warning banner; **stack traces are never shown** in the UI.
 - **Caching** — see [LLM response cache](#llm-response-cache). Pre-warm demo
   narratives before judging live.
+
+## Accessibility
+
+Accessibility is a first-class feature, not an afterthought — CareBridge targets the
+Agents League **Accessibility award**.
+
+- **Audited with Lighthouse:** **100** on the landing page; **all automated checks
+  passing** on the clinician and patient views (Snapshot mode).
+- **Screen-reader narration** — per-card "Read this" plus "Narrate everything" via the
+  browser Web Speech API (works offline with a local voice; long text is split for
+  Chrome's utterance limit).
+- **WCAG AA+ contrast** — patient-facing surfaces target ≥7:1; no meaning is conveyed
+  by color alone (every severity / red-flag chip pairs color with a `!` glyph + text).
+- **Larger-text mode**, full keyboard navigation with visible 3px focus rings, a skip
+  link, semantic landmarks + heading hierarchy, `aria-live` status announcements, and
+  `prefers-reduced-motion` support.
+
+| Landing page | Clinician / patient app |
+|---|---|
+| ![Lighthouse Accessibility score of 100 on the CareBridge landing page](assets/Landing_page_accessibility.png) | ![Lighthouse Accessibility all checks passing on the CareBridge app](assets/Main_app.png) |
 
 ## Data sources & attribution
 

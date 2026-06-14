@@ -1,0 +1,49 @@
+flowchart TD
+  subgraph Browser["Browser — React SPA (Vite + TypeScript)"]
+    UI["Landing · Clinician view · Patient view"]
+    DS["Design system<br/>tokens + components"]
+    TTS["Web Speech API<br/>TTS narration · offline"]
+    UI --- DS
+    UI --- TTS
+  end
+
+  subgraph Server["Express API — PAT stays server-side"]
+    R["Routes<br/>/parse · /patient-view<br/>/drug-label · /synthetic-patient"]
+    AILAYER["AI layer — language only<br/>extract structure · plain-language rewrite"]
+    ZOD["Zod validate<br/>+ deterministic skeleton fallback"]
+    RULES["Deterministic rules — never the LLM<br/>red flags · DDInter severity<br/>clinician brief · schedule"]
+    CACHE["Disk cache<br/>llm-parse · llm-patient · openfda 24h"]
+    R --> AILAYER --> ZOD --> RULES
+    R --> RULES
+    AILAYER -.->|"hash key"| CACHE
+  end
+
+  subgraph Ext["External — free tier, no paid keys"]
+    GM["GitHub Models<br/>gpt-4o-mini"]
+    FDA["openFDA Drug Label<br/>CC0"]
+    DDI["DDInter 2.0<br/>bundled CSV"]
+    SYN["Synthea<br/>synthetic patients"]
+  end
+
+  subgraph Dev["GitHub Copilot — Creative Apps track"]
+    COP["Agent + Plan mode<br/>grounded by .github/copilot-instructions.md"]
+    MCP["CareBridge MCP server<br/>check_interactions · lookup_drug_label<br/>detect_red_flags · get_synthetic_patient"]
+    COP -->|"mcp.json · stdio"| MCP
+  end
+
+  UI -->|"fetch /api/*"| R
+  AILAYER -->|"Bearer PAT"| GM
+  RULES -->|"severity"| DDI
+  RULES -->|"label text · 429 backoff"| FDA
+  R -->|"sample narratives"| SYN
+  MCP -.->|"reuses"| RULES
+  MCP -.->|"reuses"| FDA
+
+  classDef ai fill:#e0e7ff,stroke:#6366f1,color:#312e81;
+  classDef rule fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef ext fill:#f8fafc,stroke:#cbd5e1,color:#0f172a;
+  classDef cop fill:#fff7ed,stroke:#fb923c,color:#7c2d12;
+  class AILAYER,GM ai;
+  class RULES,ZOD,DDI rule;
+  class FDA,SYN ext;
+  class COP,MCP cop;
