@@ -53,6 +53,7 @@ const KIND_NARRATION: Record<PatientCard["kind"], string> = {
   medication: "Medication",
   safety: "Safety alert",
   interaction: "Medication safety",
+  visit: "Care visit",
 };
 
 export function cardToSpeechText(card: PatientCard): string {

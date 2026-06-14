@@ -59,7 +59,7 @@ async function main() {
       console.log(`  ${meta.id}: parse cache MISS`);
       rows.push({
         id: meta.id,
-        displayName: meta.displayName,
+        displayName: meta.displayName ?? meta.id,
         parseCached: false,
         parseSource: "miss",
         patientCached: false,
@@ -83,7 +83,7 @@ async function main() {
       console.log(`  ${meta.id}: patient-view cache MISS`);
       rows.push({
         id: meta.id,
-        displayName: meta.displayName,
+        displayName: meta.displayName ?? meta.id,
         parseCached: parseCachedBefore,
         parseSource: parseResult.source,
         patientCached: false,
@@ -99,7 +99,7 @@ async function main() {
 
     rows.push({
       id: meta.id,
-      displayName: meta.displayName,
+      displayName: meta.displayName ?? meta.id,
       parseCached: parseCachedBefore || parseResult.source === "llm-cache",
       parseSource: parseResult.source,
       patientCached: patientCachedBefore || viewResult.source === "llm-cache",
