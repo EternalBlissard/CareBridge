@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PatientNarrative } from "../../shared/narrative.js";
@@ -6,7 +6,9 @@ import type { PatientNarrative } from "../../shared/narrative.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, "../../../data/synthea");
 
-const FIXTURE_FILES = ["patient-001.json"] as const;
+const FIXTURE_FILES = readdirSync(DATA_DIR)
+  .filter((f) => f.endsWith(".json"))
+  .sort();
 
 function loadFixture(filename: string): PatientNarrative {
   const raw = readFileSync(join(DATA_DIR, filename), "utf-8");

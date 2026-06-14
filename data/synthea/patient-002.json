@@ -1,0 +1,13 @@
+{
+  "id": "synthea-patient-002",
+  "source": "sample",
+  "createdAt": "2026-06-12T00:00:00.000Z",
+  "displayName": "James Rivera, 58M",
+  "conditions": [
+    "Atrial fibrillation",
+    "Coronary artery disease",
+    "Type 2 diabetes mellitus"
+  ],
+  "attribution": "Hand-authored synthetic narrative modeled on MITRE Synthea output. Not real patient data.",
+  "rawText": "James Rivera is a 58-year-old man brought in by his wife after he passed out briefly in the kitchen this morning. He says he blacked out for a few seconds and felt lightheaded before falling. He denies chest pain but reports palpitations with dizziness over the past week.\n\nMedical history includes atrial fibrillation, coronary artery disease, and type 2 diabetes. He saw cardiology one month ago; no medication changes since then.\n\nCurrent medications:\n- Warfarin 7.5 mg once daily\n- Aspirin 81 mg once daily (started by cardiology for CAD)\n- Metformin 1000 mg twice daily\n- Atorvastatin 40 mg at bedtime\n- Metoprolol 50 mg twice daily\n\nHe has no headache, no weakness, and no slurred speech today. No recent bleeding. He manages medications independently."
+}

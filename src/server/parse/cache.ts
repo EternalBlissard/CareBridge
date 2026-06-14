@@ -46,3 +46,8 @@ export function setCachedParse(key: string, value: LlmParseResult): void {
     // Disk persistence is best-effort; memory cache already holds the value.
   }
 }
+
+export function hasCachedParse(key: string): boolean {
+  if (memory.has(key)) return true;
+  return existsSync(join(CACHE_DIR, `${key}.json`));
+}

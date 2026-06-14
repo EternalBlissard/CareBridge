@@ -19,6 +19,7 @@ export default function App() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [sample, setSample] = useState<PatientNarrative | null>(null);
+  const [samples, setSamples] = useState<Pick<PatientNarrative, "id" | "displayName">[]>([]);
   const [text, setText] = useState("");
   const [result, setResult] = useState<ParseResponse | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -40,6 +41,16 @@ export default function App() {
         setHealthError(err instanceof Error ? err.message : "Server unreachable");
       });
 
+    fetch("/api/synthetic-patient")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<{ patients: Pick<PatientNarrative, "id" | "displayName">[] }>;
+      })
+      .then((data) => setSamples(data.patients))
+      .catch(() => {
+        /* list optional */
+      });
+
     fetch("/api/synthetic-patient/default")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -56,6 +67,20 @@ export default function App() {
 
   function loadSample() {
     if (sample) setText(sample.rawText);
+  }
+
+  async function loadSampleById(id: string) {
+    try {
+      const res = await fetch(`/api/synthetic-patient/${encodeURIComponent(id)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const patient = (await res.json()) as PatientNarrative;
+      setSample(patient);
+      setText(patient.rawText);
+      setResult(null);
+      setParseError(null);
+    } catch {
+      setParseError("Could not load selected sample patient");
+    }
   }
 
   async function handleParse() {
@@ -136,11 +161,29 @@ export default function App() {
             <label htmlFor="narrative" id="parse-heading">
               Patient narrative
             </label>
-            {sample && (
-              <button type="button" className="link-btn" onClick={loadSample}>
-                Reload Synthea sample
-              </button>
-            )}
+            <div className="parse-header-actions">
+              {samples.length > 1 && (
+                <label className="sample-picker">
+                  <span className="sr-only">Demo patient</span>
+                  <select
+                    value={sample?.id ?? ""}
+                    onChange={(e) => void loadSampleById(e.target.value)}
+                    aria-label="Choose demo patient"
+                  >
+                    {samples.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.displayName ?? p.id}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {sample && (
+                <button type="button" className="link-btn" onClick={loadSample}>
+                  Reload sample text
+                </button>
+              )}
+            </div>
           </div>
           <textarea
             id="narrative"

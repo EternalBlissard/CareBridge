@@ -1,0 +1,13 @@
+{
+  "id": "synthea-patient-004",
+  "source": "sample",
+  "createdAt": "2026-06-12T00:00:00.000Z",
+  "displayName": "Patricia Walsh, 81F",
+  "conditions": [
+    "Atrial fibrillation",
+    "Osteoarthritis",
+    "Chronic kidney disease stage 3"
+  ],
+  "attribution": "Hand-authored synthetic narrative modeled on MITRE Synthea output. Not real patient data.",
+  "rawText": "Patricia Walsh is an 81-year-old woman whose daughter called EMS after noticing sudden one-sided weakness and slurred speech that began 45 minutes ago. The daughter reports facial droop on the left side. Patricia is alert but has difficulty finding words. Symptoms started while she was reading the newspaper.\n\nHistory includes atrial fibrillation on chronic anticoagulation, osteoarthritis, and CKD stage 3. No prior strokes.\n\nCurrent medications:\n- Warfarin 4 mg once daily\n- Naproxen 250 mg twice daily for knee pain (daughter thinks she may have missed doses)\n- Amlodipine 5 mg once daily\n- Acetaminophen 500 mg as needed\n\nBlood pressure at arrival was elevated. No head trauma. Daughter brought her medication bottles to the visit."
+}

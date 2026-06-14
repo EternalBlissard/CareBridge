@@ -94,9 +94,9 @@ CareBridge is a **demo triage assistant**, not a clinical product.
 
 **Synthetic data only — never enter real patient information.**
 
-- **Sample patient** (`data/synthea/`): hand-authored synthetic narrative
+- **Sample patient** (`data/synthea/`): four hand-authored synthetic narratives
   modeled on [MITRE Synthea](https://synthetichealth.github.io/synthea/)
-  output. Not a real Synthea export and not real patient data.
+  output. Not real Synthea exports and not real patient data.
 - **Drug-interaction severity** (`data/ddinter/`): hand-curated demo subset
   informed by [DDInter 2.0](https://pubmed.ncbi.nlm.nih.gov/39180399/)
   (ATC B01AC + M01AE). Not the DDInter download — swap in the real export
@@ -109,6 +109,27 @@ CareBridge is a **demo triage assistant**, not a clinical product.
 ## LLM response cache
 
 Validated LLM parses are cached in `.cache/llm-parse/` keyed by
-SHA-256 of prompt version + model + input text. Re-parsing the same
-narrative hits the cache and uses zero GitHub Models quota — pre-warm
-demo narratives by parsing them once.
+SHA-256 of `(prompt version | model | input text)`. Patient-view rewrites
+live in `.cache/llm-patient/` keyed by `(patient prompt version | model |
+story JSON)`. Re-parsing the same narrative hits cache and uses **zero**
+GitHub Models quota.
+
+### Pre-warm demo caches (run before judging live)
+
+Four bundled Synthea-style narratives live in `data/synthea/`. Warm all
+LLM + openFDA caches in one shot:
+
+```bash
+npm run test:token   # verify GITHUB_TOKEN first
+npm run prewarm      # ~4 parse + 4 patient-view LLM calls (once)
+```
+
+Verify without calling the API:
+
+```bash
+npm run prewarm:check
+```
+
+After pre-warm, a live demo parse should show `source: llm-cache` in the
+UI and touch no rate limit. Cache files stay in `.cache/` (gitignored) —
+copy them to a demo machine or re-run `npm run prewarm` there.

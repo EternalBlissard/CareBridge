@@ -9,7 +9,9 @@
     "mcp": "tsx src/mcp/server.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "test:token": "tsx scripts/test-token.ts"
+    "test:token": "tsx scripts/test-token.ts",
+    "prewarm": "tsx scripts/prewarm-cache.ts",
+    "prewarm:check": "tsx scripts/prewarm-cache.ts --dry-run"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
